@@ -2,7 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/.idea/crowdchorus.iml" filepath="$PROJECT_DIR$/.idea/crowdchorus.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/crowdchoir.iml" filepath="$PROJECT_DIR$/.idea/crowdchoir.iml" />
     </modules>
   </component>
 </project>
