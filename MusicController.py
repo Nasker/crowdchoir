@@ -3,7 +3,7 @@ from ScalesMatrix import RTPDiatonicMatrix
 from enum import Enum
 
 
-class PART_TYPE(Enum):
+class PartType(Enum):
     SCALE = 0
     FULL_CHORD = 1
     ARP_CHORD = 2
@@ -80,11 +80,11 @@ class RTPMusicController:
 
     def get_current_root_note_name(self):
         root_index = self._currentRootNote - self._CNote
-        return rootName[root_index]
+        return root_name[root_index]
 
     def get_scale_name(self):
-        return scaleName[self._currentScale]
+        return scale_name[self._currentScale]
 
     def get_chord_name(self):
-        return chordName[self._currentChord]
+        return chord_name[self._currentChord]
 
