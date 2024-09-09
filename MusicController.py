@@ -47,6 +47,12 @@ class RTPMusicController:
         self._currentScale = current_scale
         self.scales.set_tonality(self._currentScale)
 
+    def set_current_root(self, current_root):
+        self._currentRootNote = current_root
+
+    def set_current_note(self, current_note):
+        self._currentNote = current_note
+
     def set_current_chord(self, current_chord):
         self._currentChord = current_chord
         self.chords.setArpChordType(current_chord)
