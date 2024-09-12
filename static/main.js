@@ -1,3 +1,5 @@
+import RTPChordMatrix from './RTPChordMatrix.js';
+
 // Notes in the C blues scale
 const bluesScale = ["C4", "Eb4", "F4", "F#4", "G4", "Bb4", "C5"];
 

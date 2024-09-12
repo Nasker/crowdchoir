@@ -31,6 +31,7 @@ class HarmonyBridge:
         """
         if message.type == 'control_change':
             self.music_controller.set_current_note(message.control)
+            self.music_controller.set_current_root(message.control)
             self.music_controller.set_current_chord(message.value)
             note = self.music_controller.get_current_root_note_name()
             chord = self.music_controller.get_chord_name()

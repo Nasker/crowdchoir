@@ -85,7 +85,7 @@ class RTPMusicController:
                 self._octaveOffset * 12)
 
     def get_current_root_note_name(self):
-        root_index = self._currentRootNote - self._CNote
+        root_index = self._currentRootNote % 12
         return root_name[root_index]
 
     def get_scale_name(self):
