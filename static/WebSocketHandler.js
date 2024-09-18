@@ -1,10 +1,12 @@
 export default class WebSocketHandler {
     constructor(url) {
         this.socket = io(url, { transports: ['websocket'] });
-        this.socket.on('connect', () => {
-            console.log("Connected to server");
+
+        this.socket.on('connect', function(){
+            console.log("Connected to the server");
         });
-        this.socket.on('control_change', (data) => {
+
+        this.socket.on('control_change', function(data){
             console.log('Received control change:', data);
         });
     }
