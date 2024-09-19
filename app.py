@@ -26,20 +26,14 @@ def process_event_queue():
             control, value = event_queue.get()
             socketio.emit('control_change', {'control': control, 'value': value})
             print(f'->Emitted Control: {control}, Value: {value}')
-        eventlet.sleep(0.01)  # Yield to the event loop
+        eventlet.sleep(0.05)
 
 socketio.start_background_task(process_event_queue)
-
-@socketio.on('test_event')
-def test_event():
-    socketio.emit('control_change', {'control': 'test', 'value': 100})
-    print('->Test event emitted')
+harmony_bridge = HarmonyBridge('CHORDION_MIDI Port 1', handle_control_change)
 
 @socketio.on_error()
 def error_handler(e):
     print(f"An error occurred: {e}")
-
-harmony_bridge = HarmonyBridge('CHORDION_MIDI Port 1', handle_control_change)
 
 @app.route('/')
 def index():

@@ -35,7 +35,7 @@ class HarmonyBridge:
             self.music_controller.set_current_chord(message.value)
             note = self.music_controller.get_current_root_note_name()
             chord = self.music_controller.get_chord_name()
-            self.callback(note, chord)
+            self.callback(message.control, message.value)
 
     def close(self):
         """
