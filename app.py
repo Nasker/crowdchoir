@@ -5,25 +5,50 @@ from flask import Flask, render_template
 from flask_socketio import SocketIO
 from HarmonyBridge import HarmonyBridge
 from flask_cors import CORS
+import queue
 
 app = Flask(__name__)
 CORS(app, resources={r"/*": {"origins": "http://localhost:5000"}})
-socketio = SocketIO(app, cors_allowed_origins="*",  allow_credentials=True, async_mode='eventlet')
+socketio = SocketIO(app, cors_allowed_origins="*", allow_credentials=True, async_mode='eventlet')
 
+# Create a queue for MIDI control change events
+event_queue = queue.Queue()
+
+# Function to handle control changes and add them to the queue
 @socketio.on('control_change')
 def handle_control_change(control, value):
     try:
-        socketio.emit('control_change', {'control': control, 'value': value})
-        print(f'->Control: {control}, Value: {value}')
+        # Add the control change event to the queue
+        event_queue.put((control, value))
+        print(f'->Queued Control: {control}, Value: {value}')
     except Exception as e:
-        print(f"Error sending control change: {e}")
+        print(f"Error queueing control change: {e}")
+
+# Function to handle emitting events from the queue
+def process_event_queue():
+    while True:
+        if not event_queue.empty():
+            control, value = event_queue.get()
+            # Emit the event through WebSocket
+            socketio.emit('control_change', {'control': control, 'value': value})
+            print(f'->Emitted Control: {control}, Value: {value}')
+        eventlet.sleep(0.01)  # Yield to the event loop
+
+# Background task to process the queue
+socketio.start_background_task(process_event_queue)
 
 @socketio.on('test_event')
 def test_event():
     socketio.emit('control_change', {'control': 'test', 'value': 100})
     print('->Test event emitted')
 
+@socketio.on_error()  # Handles all namespaces
+def error_handler(e):
+    print(f"An error occurred: {e}")
+
+# Initialize HarmonyBridge with the callback for control changes
 harmony_bridge = HarmonyBridge('CHORDION_MIDI Port 1', handle_control_change)
+
 @app.route('/')
 def index():
     return render_template('index.html')
@@ -38,9 +63,11 @@ if __name__ == '__main__':
         except KeyboardInterrupt:
             harmony_bridge.close()
 
+    # Start the HarmonyBridge thread
     harmony_bridge_thread = threading.Thread(target=run_harmony_bridge)
     harmony_bridge_thread.start()
 
+    # Start the Flask-SocketIO app
     socketio.run(app, host='0.0.0.0', debug=True)
 
     harmony_bridge_thread.join()
