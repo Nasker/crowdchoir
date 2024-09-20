@@ -23,7 +23,8 @@ function processSocketData(data) {
     //synth.playNoteFromPosition(x, y);
 }
 
-const webSocketHandler = new WebSocketHandler(`http://${window.location.hostname}:5000`, processSocketData);
+const webSocketHandler = new WebSocketHandler(`http://${window.location.hostname}:5000`,
+                                                processSocketData);
 const userInteraction = new UserInteraction(synth);
 
 
