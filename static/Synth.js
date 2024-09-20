@@ -1,5 +1,6 @@
 export default class Synth {
-    constructor() {
+    constructor(musicController) {
+        this.musicController = musicController;
         this.synth = new Tone.Synth();
         this.feedbackDelay = new Tone.FeedbackDelay("8n", 0.5).toDestination();
         this.filter = new Tone.Filter({
@@ -7,21 +8,24 @@ export default class Synth {
             frequency: 350,
             Q: 1
         });
-
         this.synth.connect(this.filter);
         this.filter.connect(this.feedbackDelay);
-        this.bluesScale = ["C4", "Eb4", "F4", "F#4", "G4", "Bb4", "C5"];
         this.minFreq = Math.log(20);
         this.maxFreq = Math.log(20000);
     }
 
     playNoteFromPosition(x, y) {
-        const noteIndex = Math.floor((x / window.innerWidth) * this.bluesScale.length);
-        const note = this.bluesScale[noteIndex];
+        const noteIndex = Math.floor((x / window.innerWidth) * this.musicController.chords.getChordSteps());
+        this.musicController.set_current_chord_step(noteIndex);
+        const note = this.musicController.get_current_chord_midi_note();
+        this.musicController.set
+        console.log("Playing note:", note, "at index:", noteIndex);
         const scaleY = 1 - (y / window.innerHeight);
         const frequency = Math.exp(scaleY * (this.maxFreq - this.minFreq) + this.minFreq);
         this.filter.frequency.value = frequency;
         this.synth.triggerRelease();
-        this.synth.triggerAttackRelease(note, "64n");
+        const noteFreq = Tone.Frequency(note, "midi").toFrequency();
+        this.synth.triggerAttackRelease(noteFreq, "64n");
+        console.log("Playing note:", noteFreq, "at frequency:", frequency);
     }
 }

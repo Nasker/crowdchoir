@@ -1,5 +1,5 @@
 export default class WebSocketHandler {
-    constructor(url) {
+    constructor(url, onControlChange) {
         this.socket = io(url, { transports: ['websocket'] });
 
         this.socket.on('connect', function(){
@@ -7,7 +7,7 @@ export default class WebSocketHandler {
         });
 
         this.socket.on('control_change', function(data){
-            console.log('Received control change:', data);
+            onControlChange(data);
         });
 
         this.socket.on('disconnect', function(){

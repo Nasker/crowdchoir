@@ -1,6 +1,7 @@
 export default class UserInteraction {
-    constructor(synth) {
+    constructor(synth, musicController) {
         this.synth = synth;
+        this.musicController = musicController;
         this.init();
     }
 
