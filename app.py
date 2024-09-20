@@ -9,7 +9,7 @@ import queue
 
 app = Flask(__name__)
 CORS(app, resources={r"/*": {"origins": "http://localhost:5000"}})
-socketio = SocketIO(app, cors_allowed_origins="*", allow_credentials=True, async_mode='eventlet')
+socketio = SocketIO(app, cors_allowed_origins="*", allow_credentials=True, async_mode='eventlet', broadcast=True)
 
 event_queue = queue.Queue()
 
