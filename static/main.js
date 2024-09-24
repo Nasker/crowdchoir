@@ -18,12 +18,10 @@ function processSocketData(data) {
     console.log(musicController.get_current_root_note_name());
     console.log(musicController.get_chord_name());
     const x = Math.random() * window.innerWidth;
-    const y = Math.random() * window.innerHeight;
-    synth.playNoteFromPosition(x, y);
+    synth.playNoteFromPosition(x);
 }
 
-const webSocketHandler = new WebSocketHandler(`http://${window.location.hostname}:5000`,
-                                                processSocketData);
+const webSocketHandler = new WebSocketHandler(`http://${window.location.hostname}:5000`, processSocketData);
 const userInteraction = new UserInteraction(synth);
 
 

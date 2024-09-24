@@ -22,18 +22,18 @@ export default class Synth {
         this.maxFreq = Math.log(20000);
     }
 
-    playNoteFromPosition(x, y) {
+    setFilterFrequency(y) {
+        y = window.innerHeight - y;
+        const frequency = Math.exp((y / window.innerHeight) * (this.maxFreq - this.minFreq) + this.minFreq);
+        this.filter.frequency.value = frequency;
+    }
+
+    playNoteFromPosition(x) {
         const noteIndex = Math.floor((x / window.innerWidth) * this.musicController.chords.getChordSteps());
         this.musicController.set_current_chord_step(noteIndex);
         const note = this.musicController.get_current_chord_midi_note();
-        this.musicController.set
-        console.log("Playing note:", note, "at index:", noteIndex);
-        const scaleY = 1 - (y / window.innerHeight);
-        const frequency = Math.exp(scaleY * (this.maxFreq - this.minFreq) + this.minFreq);
-        this.filter.frequency.value = frequency;
-        this.synth.triggerRelease();
         const noteFreq = Tone.Frequency(note, "midi").toFrequency();
-        this.synth.triggerAttackRelease(noteFreq, "64n");
+        this.synth.triggerAttackRelease(noteFreq, "1n");
         console.log("Playing note:", noteFreq, "at frequency:", frequency);
     }
 }

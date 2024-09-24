@@ -1,17 +1,19 @@
 export default class UserInteraction {
-    constructor(synth, musicController) {
+    constructor(synth) {
         this.synth = synth;
-        this.musicController = musicController;
         this.init();
     }
 
     init() {
         window.addEventListener("click", (event) => this.handleMouseClick(event));
+        window.addEventListener("mousemove", (event) => this.handleMouseMove(event));
+    }
+
+    handleMouseMove(event) {
+        this.synth.setFilterFrequency(event.clientY);
     }
 
     handleMouseClick(event) {
-        const x = event.clientX;
-        const y = event.clientY;
-        this.synth.playNoteFromPosition(x, y);
+        this.synth.playNoteFromPosition(event.clientX);
     }
 }
