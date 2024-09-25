@@ -53,6 +53,10 @@ class RTPMusicController {
         this._currentNote = current_note;
     }
 
+    set_current_octave(current_octave) {
+        this._currentOctave = current_octave;
+    }
+
     set_current_chord(current_chord) {
         this._currentChord = current_chord;
         this.chords.setArpChordType(current_chord);

@@ -22,7 +22,10 @@ h1 {
 }
 
 /* Button styling */
-.play-button {
+#startAudio {
+    position: absolute;
+    top: 10px;
+    right: 10px;
     background-color: #162447; /* Darker blue */
     color: #e0e0e0; /* Light grey text */
     border: none;
@@ -31,6 +34,18 @@ h1 {
     cursor: pointer;
     border-radius: 5px;
     transition: background-color 0.3s ease;
+}
+
+#startAudio:hover {
+    background-color: #1f4068; /* Slightly lighter blue on hover */
+}
+
+#startAudio.active {
+    background-color: #037803;
+}
+
+#startAudio.inactive {
+    background-color: darkgray;
 }
 
 .play-button:hover {

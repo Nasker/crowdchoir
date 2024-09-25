@@ -5,15 +5,10 @@ export default class UserInteraction {
     }
 
     init() {
-        window.addEventListener("click", (event) => this.handleMouseClick(event));
         window.addEventListener("mousemove", (event) => this.handleMouseMove(event));
     }
 
     handleMouseMove(event) {
         this.synth.setFilterFrequency(event.clientY);
-    }
-
-    handleMouseClick(event) {
-        this.synth.playNoteFromPosition(event.clientX);
     }
 }

@@ -4,6 +4,7 @@ class HarmonyBridge:
     """
     A class that listens to a MIDI Virtual port and sends CommandControl structs to the callee using a callback.
     """
+    instance_count = 0
 
     def __init__(self, port_name, callback):
         """
@@ -20,6 +21,8 @@ class HarmonyBridge:
             print(f"Could not open MIDI input port: {self.port_name}")
             exit(1)
         self.callback = callback
+        HarmonyBridge.instance_count += 1  # Increment the instance count when a new instance is created
+        print(f"Number of HarmonyBridge instances: {HarmonyBridge.instance_count}")
 
     def on_control_change(self, message):
         """
@@ -27,6 +30,7 @@ class HarmonyBridge:
         :param message: The MIDI message received.
         """
         if message.type == 'control_change':
+            print(f"Received MIDI message: {message}")
             self.callback(message.control, message.value)
 
     def close(self):

@@ -6,6 +6,7 @@ from flask_socketio import SocketIO
 from HarmonyBridge import HarmonyBridge
 from flask_cors import CORS
 import queue
+import os
 
 app = Flask(__name__)
 CORS(app, resources={r"/*": {"origins": "http://localhost:5000"}})
@@ -29,7 +30,10 @@ def process_event_queue():
         eventlet.sleep(0.05)
 
 socketio.start_background_task(process_event_queue)
-harmony_bridge = HarmonyBridge('CHORDION_MIDI Port 1', handle_control_change)
+
+if os.environ.get('WERKZEUG_RUN_MAIN') == 'true':
+    # Only create the HarmonyBridge instance in the main process
+    harmony_bridge = HarmonyBridge('CHORDION_MIDI Port 1', handle_control_change)
 
 @socketio.on_error()
 def error_handler(e):
