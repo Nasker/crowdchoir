@@ -5,7 +5,7 @@ import RTPMusicController  from "./RTPMusicController.js";
 
 
 const musicController = new RTPMusicController();
-musicController.set_current_octave(4);
+musicController.set_current_octave(3);
 const synth = new Synth(musicController);
 const startAudioButton = document.getElementById('startAudio');
 

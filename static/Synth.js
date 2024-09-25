@@ -7,9 +7,23 @@ export default class Synth {
                 E3: "E3.mp3",
                 G3: "G3.mp3",
                 A3: "A3.mp3",
-                C4: "A4.mp3",
+                C4: "C4.mp3",
             },
             baseUrl: "/static/samples/",
+            envelope: {
+                attack: 0.2,
+                decay: 0.2,
+                sustain: 0.5,
+                release: 0.5
+            },
+            onload: () => {
+                // Enable looping
+                Object.keys(this.synth._buffers._buffers).forEach(key => {
+                    this.synth._buffers._buffers[key]._buffer.loop = true;
+                    this.synth._buffers._buffers[key]._buffer.loopStart = 0.1;
+                    this.synth._buffers._buffers[key]._buffer.loopEnd = 0.5;
+                });
+            }
         });
         this.feedbackDelay = new Tone.FeedbackDelay("8n", 0.5).toDestination();
         this.filter = new Tone.Filter({
@@ -34,7 +48,7 @@ export default class Synth {
         this.musicController.set_current_chord_step(noteIndex);
         const noteFreq = Tone.Frequency(this.musicController.get_current_chord_midi_note(), "midi").toFrequency();
         this.synth.triggerAttack(noteFreq);
-        console.log("Playing note:", noteFreq, 0.0, 0.1);
+        console.log("Playing note:", noteFreq);
     }
 
     playNoteOff() {
