@@ -11,7 +11,7 @@ export default class Synth {
             },
             baseUrl: "/static/samples/",
             envelope: {
-                attack: 0.2,
+                attack: 0.8,
                 decay: 0.2,
                 sustain: 0.5,
                 release: 0.5
@@ -25,7 +25,7 @@ export default class Synth {
                 });
             }
         });
-        this.feedbackDelay = new Tone.FeedbackDelay("8n", 0.5).toDestination();
+        this.feedbackDelay = new Tone.FeedbackDelay("8n", 0.2).toDestination();
         this.filter = new Tone.Filter({
             type: 'lowpass',
             frequency: 350,
@@ -36,6 +36,7 @@ export default class Synth {
         this.filter.connect(this.feedbackDelay);
         this.minFreq = Math.log(20);
         this.maxFreq = Math.log(20000);
+        this.lastNote = null;
     }
 
     setFilterFrequency(y) {
@@ -47,12 +48,15 @@ export default class Synth {
         const noteIndex = Math.floor((x / window.innerWidth) * this.musicController.chords.getChordSteps());
         this.musicController.set_current_chord_step(noteIndex);
         const noteFreq = Tone.Frequency(this.musicController.get_current_chord_midi_note(), "midi").toFrequency();
+        if(this.lastNote)
+            this.synth.triggerRelease(this.lastNote);
         this.synth.triggerAttack(noteFreq);
+        this.lastNote = noteFreq;
         console.log("Playing note:", noteFreq);
     }
 
     playNoteOff() {
         console.log("Stopping note");
-        this.synth.triggerRelease();
+        this.synth.triggerRelease(this.lastNote);
     }
 }

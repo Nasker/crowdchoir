@@ -12,9 +12,10 @@
 <body>
     <div class="container">
         <h1>Crowd Choir Test</h1>
-        <p>Move the mouse to change the played note and filter cutoff</p>
+        <p>Move the mouse to change the played note and filter cutoff, or use your device's gyroscope if available.</p>
         <button id="startAudio">Start Audio</button>
+        <button id="start_demo" class="btn-success">Start demo</button>
     </div>
-    <script type="module"  src="{{ url_for('static', filename='main.js') }}"></script>
+    <script type="module" src="{{ url_for('static', filename='main.js') }}"></script>
 </body>
 </html>
