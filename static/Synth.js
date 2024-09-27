@@ -25,15 +25,18 @@ export default class Synth {
                 });
             }
         });
-        this.feedbackDelay = new Tone.FeedbackDelay("8n", 0.2).toDestination();
+        this.limiter = new Tone.Limiter(-10).toDestination();
+        this.comp = new Tone.Compressor(-30, 3);
+        this.feedbackDelay = new Tone.FeedbackDelay("8n", 0.1);
         this.filter = new Tone.Filter({
             type: 'lowpass',
             frequency: 350,
             Q: 1
         });
-
         this.synth.connect(this.filter);
-        this.filter.connect(this.feedbackDelay);
+        this.filter.connect(this.comp);
+        this.comp.connect(this.feedbackDelay);
+        this.feedbackDelay.connect(this.limiter);
         this.minFreq = Math.log(20);
         this.maxFreq = Math.log(20000);
         this.lastNote = null;

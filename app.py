@@ -11,7 +11,7 @@ import os
 app = Flask(__name__)
 CORS(app, resources={r"/*": {"origins": "http://localhost:5000"}})
 socketio = SocketIO(app, cors_allowed_origins="*", allow_credentials=True, async_mode='eventlet', broadcast=True)
-
+harmony_bridge = None
 event_queue = queue.Queue()
 
 @socketio.on('control_change')
@@ -49,7 +49,8 @@ if __name__ == '__main__':
     def run_harmony_bridge():
         print("Starting HarmonyBridge thread...")
         try:
-            harmony_bridge
+            if harmony_bridge:
+                harmony_bridge
         except KeyboardInterrupt:
             harmony_bridge.close()
 
