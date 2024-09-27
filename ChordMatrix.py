@@ -5,41 +5,41 @@ class RTPChordMatrix:
 
     # Class variables for chord and arpeggio steps
     chordStep = [
-        [0, 12, -12, 24],       # Monophonic
-        [0, 12, -12, 24],       # Octave
-        [0, 7, 12, -12, 19],    # PowerChord
+        [0, 12, -12, 24],  # Monophonic
         [0, 4, 7, 12, -12, 16, 19],  # Major
         [0, 3, 7, 12, -12, 15, 19],  # Minor
         [0, 4, 7, 11, -12, 16, 19],  # Major 7th
         [0, 3, 7, 10, -12, 15, 19],  # Minor 7th
         [0, 4, 7, 10, -12, 16, 19],  # Dominant 7th
         [0, 3, 6, 12, -12, 15, 18],  # Diminished
+        [0, 3, 6, 9, 12, -12, 15, 18],  # Diminished 7th
+        [0, 3, 6, 10, 12, -12, 15, 18],  # Half Diminished 7th
         [0, 4, 8, 12, -12, 16, 20],  # Augmented
-        [0, 4, 10, 15, -12, 16, 22],  # Hendrixian
-        [0, 3, 6, 12, -12, 15, 18],  # Sus2
-        [0, 5, 7, 12, -12, 24, 17, 19],  # Sus4
-        [0, 4, 8, 12, -12, 24, 16, 20],  # Dominant Ninth
-        [0, 3, 8, 12, -12, 24, 15, 20],  # Dominant Ninth
-        [0, 6, 10, 16, 21, 26, -12, 18]  # Mystic
+        [0, 4, 7, 10, 14, 12, -12],  # Major 9th
+        [0, 3, 7, 10, 14, 12, -12],  # Minor 9th
+        [0, 4, 7, 10, 14, 12, -12],  # Dominant 9th
+        [0, 5, 7, 12, -12, 24, 17, 19],  # Suspended 4th
+        [0, 2, 7, 12, -12, 24, 17, 19],  # Suspended 2th
+        [0, 4, 7, 9, 12, -12, 16, 19]  # Sixth
     ]
 
     arpChordStep = [
         [0],                # Monophonic
-        [0],                # Octave
-        [0, 7],             # PowerChord
         [0, 4, 7],          # Major
         [0, 3, 7],          # Minor
         [0, 4, 7, 11],      # Major 7th
         [0, 3, 7, 10],      # Minor 7th
         [0, 4, 7, 10],      # Dominant 7th
         [0, 3, 6],          # Diminished
+        [0, 3, 6, 9],       # Diminished 7th
+        [0, 3, 6, 10],      # Half-Diminished 7th
         [0, 4, 8],          # Augmented
-        [0, 4, 10],         # Hendrixian
-        [0, 3, 6],          # Sus2
-        [0, 5, 7],          # Sus4
-        [0, 4, 8],          # Dominant Ninth
-        [0, 3, 8],          # Dominant Ninth
-        [0, 6, 10]          # Mystic
+        [0, 4, 7, 14],      # Major 9th
+        [0, 3, 7, 14],      # Minor 9th
+        [0, 4, 7, 10, 14],  # Dominant 9th
+        [0, 5, 7],          # Suspended 4th
+        [0, 2, 7],          # Suspended 2nd
+        [0, 4, 7, 9],       # 6th chord
     ]
 
     def __init__(self):
