@@ -22,28 +22,22 @@ class ChordFinder:
     def identify_chord(self, midi_notes):
         """Identify the chord by comparing it with the music controller's chord patterns."""
         pitch_classes = self.midi_to_pitch_classes(midi_notes)
-
         for i in range(len(pitch_classes)):
             rotated_notes = pitch_classes[i:] + pitch_classes[:i]
             intervals = self.get_intervals(rotated_notes)
-
-            # Compare the intervals with each chord type
             for chord_type in range(len(chord_name)):
                 self.music_controller.set_current_chord(chord_type)
                 steps = [self.music_controller.chords.getChordStep(step) for step in
                          range(self.music_controller.chords.getChordSteps())]
-
-                # Convert chord steps into intervals
                 chord_intervals = [(steps[i + 1] - steps[i]) % 12 for i in range(len(steps) - 1)]
-
-                # Check if the intervals match
                 if intervals[:len(chord_intervals)] == chord_intervals[:len(intervals)]:
                     root_note = rotated_notes[0]
                     chord_name_str = self.music_controller.get_chord_name()
                     root_name_str = root_name[root_note]
-                    return f"Root: {root_name_str}, Chord: {chord_name_str}"
-
-        return "Unknown chord"
+                    print(f"Root: {root_name_str}, Chord: {chord_name_str}")
+                    return root_note, chord_type
+        print("Chord not found")
+        return 0, 0
 
 
 # Example usage

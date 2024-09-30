@@ -1,4 +1,5 @@
 import mido
+import threading
 from ChordFinder import ChordFinder
 from MusicController import RTPMusicController
 class HarmonyBridge:
@@ -7,7 +8,7 @@ class HarmonyBridge:
     """
     instance_count = 0
 
-    def __init__(self, port_name, callback):
+    def __init__(self, port_name, callback, channel=0):
         """
         Initializes the HarmonyBridge object and sets up the MIDI input port with a callback.
         :param port_name: The name of the MIDI Virtual port to listen to.
@@ -17,8 +18,9 @@ class HarmonyBridge:
         print("Available MIDI input ports:", mido.get_input_names())
         self.port_name = port_name
         self.played_notes = []
-        self.channel = 1
-        self.len_detected_chord = 4
+        self.channel = channel
+        self.timeout_duration = 0.03
+        self.detection_timer = None
         try:
             self.port = mido.open_input(self.port_name, callback=self.select_message_type)
         except IOError:
@@ -57,8 +59,19 @@ class HarmonyBridge:
         """
         if message.channel == self.channel:
             self.played_notes.append(message.note)
-            if len(self.played_notes) == self.len_detected_chord:
-                print("--->",self.chord_finder.identify_chord(self.played_notes))
+            if self.detection_timer is not None:
+                self.detection_timer.cancel()
+            self.detection_timer = threading.Timer(self.timeout_duration, self.detect_chord)
+            self.detection_timer.start()
+
+    def detect_chord(self):
+        """
+        Called after the timeout period to detect the chord.
+        """
+        if len(self.played_notes) > 0:
+            control, value = self.chord_finder.identify_chord(self.played_notes)
+            self.callback(control, value)
+        self.played_notes.clear()
 
     def on_note_off(self, message):
         """
@@ -80,8 +93,9 @@ if __name__ == '__main__':
         print(f'Control: {control}, Value: {value}')
 
     # Open a virtual port and start listening
-    bridge = HarmonyBridge('CHORDION_MIDI Port 1', callback)
+    # bridge = HarmonyBridge('Driver IAC Bus 1', callback, 0)
     # bridge = HarmonyBridge('UMX 25', callback)
+    bridge = HarmonyBridge('CHORDION_MIDI Port 1', callback, 3)
 
     try:
         input("Listening for MIDI control changes. Press Enter to exit...\n")
