@@ -11,7 +11,7 @@ export default class Synth {
             },
             baseUrl: "/static/samples/",
         });
-        this.limiter = new Tone.Limiter(-10).toDestination();
+        this.limiter = new Tone.Limiter(-20).toDestination();
         this.comp = new Tone.Compressor(-30, 3);
         this.feedbackDelay = new Tone.FeedbackDelay("8n", 0.1);
         this.envelope = new Tone.AmplitudeEnvelope({

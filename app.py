@@ -33,7 +33,8 @@ socketio.start_background_task(process_event_queue)
 
 if os.environ.get('WERKZEUG_RUN_MAIN') == 'true':
     # Only create the HarmonyBridge instance in the main process
-    harmony_bridge = HarmonyBridge('CHORDION_MIDI Port 1', handle_control_change)
+    # harmony_bridge = HarmonyBridge('CHORDION_MIDI Port 1', handle_control_change, 3)
+    harmony_bridge = HarmonyBridge('Driver IAC Bus 1', handle_control_change, 0)
 
 @socketio.on_error()
 def error_handler(e):
@@ -50,7 +51,7 @@ if __name__ == '__main__':
         print("Starting HarmonyBridge thread...")
         try:
             if harmony_bridge:
-                harmony_bridge
+                ...
         except KeyboardInterrupt:
             harmony_bridge.close()
 
