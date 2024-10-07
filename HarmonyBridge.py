@@ -1,5 +1,4 @@
 import mido
-import threading
 from ChordFinder import ChordFinder
 from MusicController import RTPMusicController
 class HarmonyBridge:
@@ -19,8 +18,7 @@ class HarmonyBridge:
         self.port_name = port_name
         self.played_notes = []
         self.channel = channel
-        self.timeout_duration = 0.03
-        self.detection_timer = None
+        self.n_notes_detection = 4
         try:
             self.port = mido.open_input(self.port_name, callback=self.select_message_type)
         except IOError:
@@ -59,10 +57,8 @@ class HarmonyBridge:
         """
         if message.channel == self.channel:
             self.played_notes.append(message.note)
-            if self.detection_timer is not None:
-                self.detection_timer.cancel()
-            self.detection_timer = threading.Timer(self.timeout_duration, self.detect_chord)
-            self.detection_timer.start()
+            if len(self.played_notes) == self.n_notes_detection:
+                self.detect_chord()
 
     def detect_chord(self):
         """
