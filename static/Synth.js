@@ -9,7 +9,7 @@ export default class Synth {
                 A3: "A3.mp3",
                 C4: "C4.mp3",
             },
-            baseUrl: "/static/samples/",
+            baseUrl: "/static/samples/mello_flute/",
         });
         this.limiter = new Tone.Limiter(-20).toDestination();
         this.comp = new Tone.Compressor(-30, 3);
