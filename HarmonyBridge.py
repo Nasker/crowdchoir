@@ -24,6 +24,11 @@ class HarmonyBridge:
         except IOError:
             print(f"Could not open MIDI input port: {self.port_name}")
             exit(1)
+        try:
+            self.outport = mido.open_output('BUIT_MIDI')
+        except IOError:
+            print(f"Could not open MIDI output port: BUIT_MIDI")
+            exit(1)
         self.callback = callback
         HarmonyBridge.instance_count += 1  # Increment the instance count when a new instance is created
         print(f"Number of HarmonyBridge instances: {HarmonyBridge.instance_count}")
@@ -67,6 +72,8 @@ class HarmonyBridge:
         if len(self.played_notes) > 0:
             control, value = self.chord_finder.identify_chord(self.played_notes)
             self.callback(control, value)
+            self.outport.send(mido.Message('control_change', control=control, value=value))
+            print(f'SEND CONTROL TO BUIT_MIDI: {control}, {value}')
         self.played_notes.clear()
 
     def on_note_off(self, message):
@@ -92,7 +99,7 @@ if __name__ == '__main__':
     # bridge = HarmonyBridge('Driver IAC Bus 1', callback, 0)
     # bridge = HarmonyBridge('UMX 25', callback)
     bridge = HarmonyBridge('CHORDION_MIDI Port 1', callback, 3)
-
+    # create an instance of mido as an output to BUIT_MIDI
     try:
         input("Listening for MIDI control changes. Press Enter to exit...\n")
     finally:
