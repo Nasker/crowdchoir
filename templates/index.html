@@ -12,9 +12,16 @@
 <body>
     <div class="container">
         <h1>Crowd Choir Test</h1>
-        <p>Move the mouse to change the played note and filter cutoff, or use your device's gyroscope if available.</p>
+        <p>Click around the screen to open/close the filter</p>
         <button id="startAudio">Start Audio</button>
-        <button id="start_demo" class="btn-success">Start demo</button>
+        
+        <div class="sample-selector">
+            <h3>Select Sample:</h3>
+            <div class="sample-buttons">
+                <button id="sample-mello_flute" class="sample-btn active">Mello Flute</button>
+                <button id="sample-mello_ohs" class="sample-btn">Mello OHs</button>
+            </div>
+        </div>
     </div>
     <script type="module" src="{{ url_for('static', filename='main.js') }}"></script>
 </body>

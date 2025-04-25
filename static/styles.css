@@ -55,3 +55,40 @@ h1 {
 .play-button:active {
     background-color: #1b1b2f; /* Even darker when pressed */
 }
+
+/* Sample selector styles */
+.sample-selector {
+    margin-top: 30px;
+    text-align: center;
+}
+
+.sample-selector h3 {
+    color: #00aaff;
+    margin-bottom: 15px;
+}
+
+.sample-buttons {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+}
+
+.sample-btn {
+    background-color: #162447;
+    color: #e0e0e0;
+    border: none;
+    padding: 10px 20px;
+    font-size: 16px;
+    cursor: pointer;
+    border-radius: 5px;
+    transition: all 0.3s ease;
+}
+
+.sample-btn:hover {
+    background-color: #1f4068;
+}
+
+.sample-btn.active {
+    background-color: #037803;
+    box-shadow: 0 0 10px rgba(3, 120, 3, 0.5);
+}

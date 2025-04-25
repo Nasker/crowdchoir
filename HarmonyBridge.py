@@ -1,4 +1,5 @@
 import mido
+import time
 from ChordFinder import ChordFinder
 from MusicController import RTPMusicController
 class HarmonyBridge:
@@ -19,6 +20,11 @@ class HarmonyBridge:
         self.played_notes = []
         self.channel = channel
         self.n_notes_detection = 4
+        
+        # Add deduplication cache
+        self.last_message = None
+        self.last_message_time = 0
+        self.dedup_timeout = 0.5  # seconds
         try:
             self.port = mido.open_input(self.port_name, callback=self.select_message_type)
         except IOError:
@@ -52,6 +58,20 @@ class HarmonyBridge:
         Callback function for the MIDI input port.
         :param message: The MIDI message received.
         """
+        # Create a unique message identifier
+        current_message = (message.control, message.value)
+        current_time = time.time()
+        
+        # Check if this is a duplicate message
+        if self.last_message == current_message and \
+           (current_time - self.last_message_time) < self.dedup_timeout:
+            print(f"Ignoring duplicate MIDI message: {message.control}, {message.value}")
+            return
+        
+        # Update the last message info
+        self.last_message = current_message
+        self.last_message_time = current_time
+        
         print(f"Control Change: {message.control} Value: {message.value}")
         self.callback(message.control, message.value)
 
@@ -72,8 +92,9 @@ class HarmonyBridge:
         if len(self.played_notes) > 0:
             control, value = self.chord_finder.identify_chord(self.played_notes)
             self.callback(control, value)
-            self.outport.send(mido.Message('control_change', control=control, value=value))
-            print(f'SEND CONTROL TO BUIT_MIDI: {control}, {value}')
+            # Comment out MIDI output to prevent feedback loops
+            # self.outport.send(mido.Message('control_change', control=control, value=value))
+            # print(f'SEND CONTROL TO BUIT_MIDI: {control}, {value}')
         self.played_notes.clear()
 
     def on_note_off(self, message):

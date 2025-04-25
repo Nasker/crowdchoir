@@ -1,6 +1,15 @@
 export default class Synth {
     constructor(musicController) {
         this.musicController = musicController;
+        this.currentSampleSet = 'mello_flute';
+        
+        // Define available sample sets
+        this.sampleSets = {
+            'mello_flute': "/static/samples/mello_flute/",
+            'mello_ohs': "/static/samples/mello_ohs/"
+        };
+        
+        // Create the sampler with default sample set
         this.synth = new Tone.Sampler({
             urls: {
                 C3: "C3.mp3",
@@ -9,7 +18,7 @@ export default class Synth {
                 A3: "A3.mp3",
                 C4: "C4.mp3",
             },
-            baseUrl: "/static/samples/mello_flute/",
+            baseUrl: this.sampleSets[this.currentSampleSet],
         });
         this.limiter = new Tone.Limiter(-20).toDestination();
         this.comp = new Tone.Compressor(-30, 3);
@@ -59,5 +68,55 @@ export default class Synth {
         console.log("Stopping note");
         this.synth.triggerRelease(this.lastNote);
         this.envelope.triggerRelease();
+    }
+    
+    /**
+     * Changes the sample set used by the synth
+     * @param {string} sampleSetName - Name of the sample set to use ('mello_flute', 'piano', or 'strings')
+     * @returns {boolean} - Whether the change was successful
+     */
+    changeSampleSet(sampleSetName) {
+        // Check if the requested sample set exists
+        if (!this.sampleSets[sampleSetName]) {
+            console.error(`Sample set '${sampleSetName}' not found`);
+            return false;
+        }
+        
+        // If we're already using this sample set, do nothing
+        if (this.currentSampleSet === sampleSetName) {
+            return true;
+        }
+        
+        // Stop any currently playing notes
+        if (this.lastNote) {
+            this.playNoteOff();
+        }
+        
+        // Update the current sample set
+        this.currentSampleSet = sampleSetName;
+        
+        // Disconnect the old sampler
+        this.synth.disconnect();
+        
+        // Create a new sampler with the selected sample set
+        this.synth = new Tone.Sampler({
+            urls: {
+                C3: "C3.mp3",
+                E3: "E3.mp3",
+                G3: "G3.mp3",
+                A3: "A3.mp3",
+                C4: "C4.mp3",
+            },
+            baseUrl: this.sampleSets[sampleSetName],
+            onload: () => {
+                console.log(`Loaded sample set: ${sampleSetName}`);
+            }
+        });
+        
+        // Reconnect the signal chain
+        this.synth.connect(this.filter);
+        
+        console.log(`Changed sample set to: ${sampleSetName}`);
+        return true;
     }
 }
