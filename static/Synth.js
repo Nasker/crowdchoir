@@ -31,7 +31,7 @@ export default class Synth {
         });
         this.filter = new Tone.Filter({
             type: 'lowpass',
-            frequency: 350,
+            frequency: 1000,
             Q: 1
         });
         this.synth.connect(this.filter);
@@ -45,9 +45,48 @@ export default class Synth {
         this.lastNote = null;
     }
 
-    setFilterFrequency(y) {
-        const frequency = Math.exp((y / window.innerHeight) * (this.maxFreq - this.minFreq) + this.minFreq);
+    /**
+     * Set the filter cutoff frequency based on Y position
+     * @param {number} normalizedY - Value between 0 and 1 representing vertical position
+     * @returns {number} - The actual frequency value set
+     */
+    setFilterFrequency(normalizedY) {
+        // Invert Y so higher position = higher frequency (1 at top, 0 at bottom)
+        normalizedY = 1 - normalizedY;
+        
+        // Map to frequency range (exponential scale sounds more natural)
+        const minFreq = 80;    // 80 Hz
+        const maxFreq = 12000; // 12 kHz
+        
+        // Use exponential mapping for more natural frequency control
+        const expScale = Math.pow(maxFreq / minFreq, normalizedY);
+        const frequency = minFreq * expScale;
+        
+        // Apply frequency with rounding for display purposes
         this.filter.frequency.value = frequency;
+        
+        // Return rounded value for display
+        return Math.round(frequency);
+    }
+    
+    /**
+     * Set the filter resonance (Q) based on X position
+     * @param {number} normalizedX - Value between 0 and 1 representing horizontal position
+     * @returns {number} - The actual Q value set
+     */
+    setResonance(normalizedX) {
+        // Map X to Q value range (0.1 to 10)
+        const minQ = 0.1;
+        const maxQ = 10;
+        
+        // Use a curve that gives finer control at lower values
+        const qValue = minQ + (Math.pow(normalizedX, 2) * (maxQ - minQ));
+        
+        // Apply Q value
+        this.filter.Q.value = qValue;
+        
+        // Return value with 1 decimal place for display
+        return Math.round(qValue * 10) / 10;
     }
 
     playNoteOnFromPosition(x) {

@@ -31,7 +31,8 @@ class HarmonyBridge:
             print(f"Could not open MIDI input port: {self.port_name}")
             exit(1)
         try:
-            self.outport = mido.open_output('BUIT_MIDI')
+            # self.outport = mido.open_output('BUIT_MIDI')
+            ...
         except IOError:
             print(f"Could not open MIDI output port: BUIT_MIDI")
             exit(1)

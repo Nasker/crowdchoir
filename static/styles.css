@@ -1,94 +1,220 @@
-/* General styling */
-body {
-    margin: 0;
-    font-family: Arial, sans-serif;
-    background-color: #1a1a2e; /* Dark background */
-    color: #e0e0e0; /* Light grey text */
+/* CSS Variables to match Sequence Visualizer */
+:root {
+    --primary-color: #1a1a2e;
+    --secondary-color: #16213e;
+    --accent-color: #0f3460;
+    --highlight-color: #e94560;
+    --background-color: #121212;
+    --surface-color: #1e1e1e;
+    --text-color: #e0e0e0;
+    --text-secondary: #aaaaaa;
+    --border-color: #333333;
+    --active-color: #4ecca3;
+    --inactive-color: #555555;
 }
 
-/* Container for centering content */
-.container {
+/* General styling */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: var(--background-color);
+    color: var(--text-color);
+    line-height: 1.6;
+    text-align: center;
+    overflow: hidden;
+    height: 100vh;
+    width: 100vw;
     display: flex;
     flex-direction: column;
-    justify-content: center;
+}
+
+/* Header styling */
+header {
+    display: flex;
+    justify-content: space-between;
     align-items: center;
-    height: 100vh;
+    background-color: var(--primary-color);
+    padding: 1rem 2rem;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+    z-index: 10;
 }
 
 /* Heading style */
 h1 {
-    color: #00aaff; /* Blueish heading */
-    margin-bottom: 20px;
+    color: var(--highlight-color);
+    margin: 0;
+    font-size: 1.8rem;
+    text-align: center;
+    flex: 1;
 }
 
-/* Button styling */
+/* Main container - similar to 'main' in Sequence Visualizer */
+.main-container {
+    flex: 1;
+    display: flex;
+    padding: 1rem;
+    box-sizing: border-box;
+    overflow: hidden;
+}
+
+/* Button styling - matches Sequence Visualizer */
 #startAudio {
-    position: absolute;
-    top: 10px;
-    right: 10px;
-    background-color: #162447; /* Darker blue */
-    color: #e0e0e0; /* Light grey text */
+    background-color: var(--accent-color);
+    color: white;
     border: none;
-    padding: 15px 30px;
-    font-size: 18px;
+    padding: 0.5rem 1rem;
+    font-size: 1rem;
     cursor: pointer;
-    border-radius: 5px;
-    transition: background-color 0.3s ease;
+    border-radius: 4px;
+    font-weight: 500;
+    transition: background-color 0.2s;
 }
 
 #startAudio:hover {
-    background-color: #1f4068; /* Slightly lighter blue on hover */
+    background-color: var(--highlight-color);
 }
 
 #startAudio.active {
-    background-color: #037803;
+    background-color: var(--active-color);
 }
 
 #startAudio.inactive {
-    background-color: darkgray;
+    background-color: var(--inactive-color);
+    cursor: not-allowed;
 }
 
-.play-button:hover {
-    background-color: #1f4068; /* Slightly lighter blue on hover */
+/* X-Y Pad styling - similar to sequence-editor in Sequence Visualizer */
+.xy-pad {
+    flex: 1;
+    background-color: var(--surface-color);
+    border-radius: 8px;
+    position: relative;
+    cursor: crosshair;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    user-select: none;
+    touch-action: none; /* Prevent default touch actions */
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+    margin: 0 auto;
+    width: 100%;
+    max-width: 900px;
 }
 
-.play-button:active {
-    background-color: #1b1b2f; /* Even darker when pressed */
-}
-
-/* Sample selector styles */
-.sample-selector {
-    margin-top: 30px;
+.pad-instructions {
     text-align: center;
+    background-color: rgba(26, 26, 46, 0.6);
+    padding: 1rem;
+    border-radius: 6px;
+    pointer-events: none; /* Allow clicks to pass through */
+    max-width: 300px;
 }
 
-.sample-selector h3 {
-    color: #00aaff;
-    margin-bottom: 15px;
+.pad-instructions p {
+    margin: 0 0 0.8rem 0;
+    font-size: 1rem;
+    color: var(--text-color);
+}
+
+.filter-values {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 0.8rem;
+    gap: 1.5rem;
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+}
+
+.touch-marker {
+    position: absolute;
+    width: 20px;
+    height: 20px;
+    background-color: var(--highlight-color);
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+    box-shadow: 0 0 10px var(--highlight-color);
+}
+
+/* Sample selector styles - similar to scene-selector in Sequence Visualizer */
+.sample-selector {
+    background-color: var(--primary-color);
+    padding: 1rem;
+    width: 100%;
+    box-sizing: border-box;
+    border-top: 1px solid var(--border-color);
+    box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.3);
 }
 
 .sample-buttons {
     display: flex;
-    gap: 10px;
+    gap: 0.5rem;
     justify-content: center;
+    flex-wrap: wrap;
 }
 
 .sample-btn {
-    background-color: #162447;
-    color: #e0e0e0;
+    padding: 0.5rem 1rem;
+    background-color: var(--surface-color);
+    color: var(--text-color);
     border: none;
-    padding: 10px 20px;
-    font-size: 16px;
+    border-radius: 4px;
+    border-bottom: 4px solid var(--accent-color);
     cursor: pointer;
-    border-radius: 5px;
-    transition: all 0.3s ease;
+    transition: background-color 0.2s;
+    min-width: 100px;
+    text-align: center;
+    font-size: 0.9rem;
 }
 
 .sample-btn:hover {
-    background-color: #1f4068;
+    background-color: var(--primary-color);
 }
 
 .sample-btn.active {
-    background-color: #037803;
-    box-shadow: 0 0 10px rgba(3, 120, 3, 0.5);
+    border-bottom-color: var(--active-color);
+    background-color: var(--accent-color);
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    header {
+        padding: 0.75rem 1rem;
+    }
+    
+    h1 {
+        font-size: 1.4rem;
+    }
+    
+    .pad-instructions {
+        padding: 0.75rem;
+        max-width: 250px;
+    }
+    
+    .sample-btn {
+        padding: 0.4rem 0.75rem;
+        font-size: 0.85rem;
+        min-width: 80px;
+    }
+    
+    #startAudio {
+        padding: 0.4rem 0.75rem;
+        font-size: 0.85rem;
+    }
+    
+    .main-container {
+        padding: 0.75rem;
+    }
+    
+    .filter-values {
+        font-size: 0.8rem;
+        gap: 1rem;
+    }
 }

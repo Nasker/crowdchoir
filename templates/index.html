@@ -10,19 +10,31 @@
     <script src="https://cdn.socket.io/4.3.2/socket.io.min.js"></script>
 </head>
 <body>
-    <div class="container">
+    <header>
         <h1>Crowd Choir Test</h1>
-        <p>Click around the screen to open/close the filter</p>
         <button id="startAudio">Start Audio</button>
-        
-        <div class="sample-selector">
-            <h3>Select Sample:</h3>
-            <div class="sample-buttons">
-                <button id="sample-mello_flute" class="sample-btn active">Mello Flute</button>
-                <button id="sample-mello_ohs" class="sample-btn">Mello OHs</button>
+    </header>
+    
+    <div class="main-container">
+        <div id="xy-pad" class="xy-pad">
+            <div class="pad-instructions">
+                <p>Touch or click to control filter</p>
+                <div class="filter-values">
+                    <span id="cutoff-value">Cutoff: 1000 Hz</span>
+                    <span id="resonance-value">Resonance: 1</span>
+                </div>
             </div>
+            <div id="touch-marker" class="touch-marker"></div>
         </div>
     </div>
+    
+    <div class="sample-selector">
+        <div class="sample-buttons">
+            <button id="sample-mello_flute" class="sample-btn active">Mello Flute</button>
+            <button id="sample-mello_ohs" class="sample-btn">Mello OHs</button>
+        </div>
+    </div>
+    
     <script type="module" src="{{ url_for('static', filename='main.js') }}"></script>
 </body>
 </html>
