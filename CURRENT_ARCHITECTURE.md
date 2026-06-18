@@ -44,10 +44,10 @@ CrowdChoir is a client-server application with a Python/Flask backend and a Java
 
 The entry point and orchestrator.
 
-- Creates the Flask app and Socket.IO server (eventlet async mode).
+- Creates the Flask app and Socket.IO server (threading async mode).
 - CORS enabled for all origins (development-friendly).
 - `_queue_chord(root, chord_type)` is the single funnel for all chord events — called by the MIDI thread and by the conductor socket. It deduplicates, updates `current_chord` state, and pushes to `event_queue`. It also emits `chord_changed` directly to the `'conductor'` Socket.IO room.
-- A background greenlet drains the queue and broadcasts `control_change` to all clients.
+- A background thread drains the queue and broadcasts `control_change` to all clients.
 - Tracks `connected_clients` via `connect` / `disconnect` events; emits `client_count` updates to the conductor room.
 
 **Conductor socket events:**
@@ -63,7 +63,7 @@ The entry point and orchestrator.
 | Setting | Value |
 |---|---|
 | Listen address | 0.0.0.0:5000 |
-| Async mode | eventlet |
+| Async mode | threading |
 | Ping timeout | 10 s |
 | Ping interval | 5 s |
 | Dedup window | 0.5 s |
@@ -173,7 +173,7 @@ Controller plays 4 notes
         └─► ChordFinder.identify_chord()
               └─► callback(root, chord_type)
                     └─► event_queue.put(...)
-                          └─► background greenlet
+                          └─► background thread
                                 └─► socketio.emit('control_change', {control: root, value: chord_type})
                                       └─► [all browsers] WebSocketHandler.onControlChange()
                                             └─► RTPMusicController.setChord(root, chord_type)

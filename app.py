@@ -1,6 +1,3 @@
-import eventlet
-eventlet.monkey_patch()
-
 from flask import Flask, render_template
 from flask_socketio import SocketIO, emit, join_room
 from flask_cors import CORS
@@ -19,7 +16,7 @@ CORS(app, resources={r"/*": {"origins": "*"}})
 socketio = SocketIO(
     app,
     cors_allowed_origins="*",
-    async_mode='eventlet',
+    async_mode='threading',
     ping_timeout=10,
     ping_interval=5,
 )
@@ -79,7 +76,7 @@ def process_event_queue():
             root, chord_type = event_queue.get()
             socketio.emit('control_change', {'control': root, 'value': chord_type})
             print(f"-> Broadcast control={root} value={chord_type}")
-        eventlet.sleep(0.01)
+        socketio.sleep(0.01)
 
 socketio.start_background_task(process_event_queue)
 

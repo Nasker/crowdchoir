@@ -109,8 +109,7 @@ crowdchoir/
 | Package | Version | Purpose |
 |---|---|---|
 | Flask | 3.0.0 | Web server |
-| Flask-SocketIO | 5.3.6 | WebSocket integration |
-| eventlet | 0.33.3 | Async green threads |
+| Flask-SocketIO | 5.3.6 | WebSocket integration (threading async mode) |
 | mido | 1.2.10 | MIDI I/O |
 | python-rtmidi | 2.5.0 | Real-time MIDI backend |
 | Tone.js | (CDN) | Web Audio synthesis |
