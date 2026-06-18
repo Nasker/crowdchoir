@@ -68,9 +68,9 @@ def process_event_queue():
 socketio.start_background_task(process_event_queue)
 
 if os.environ.get('WERKZEUG_RUN_MAIN') == 'true':
-    # Only create the HarmonyBridge instance in the main process
-    # harmony_bridge = HarmonyBridge('CHORDION_MIDI Port 1', handle_control_change, 3)
-    harmony_bridge = HarmonyBridge('Driver IAC Bus 1', handle_control_change, 0)
+    midi_port = os.environ.get('MIDI_PORT', 'Driver IAC Bus 1')
+    midi_channel = int(os.environ.get('MIDI_CHANNEL', '0'))
+    harmony_bridge = HarmonyBridge(midi_port, handle_control_change, midi_channel)
 
 @socketio.on_error()
 def error_handler(e):

@@ -1,5 +1,6 @@
 import mido
 import time
+import threading
 from ChordFinder import ChordFinder
 from MusicController import RTPMusicController
 class HarmonyBridge:
@@ -19,23 +20,23 @@ class HarmonyBridge:
         self.port_name = port_name
         self.played_notes = []
         self.channel = channel
-        self.n_notes_detection = 4
-        
-        # Add deduplication cache
+        self.DEBOUNCE_DELAY = 0.15  # seconds — wait for strumming to settle
+
+        # Debounce timer for chord detection
+        self._chord_timer = None
+        self._timer_lock = threading.Lock()
+
+        # Deduplication cache
         self.last_message = None
         self.last_message_time = 0
         self.dedup_timeout = 0.5  # seconds
+        self.port = None
         try:
             self.port = mido.open_input(self.port_name, callback=self.select_message_type)
+            print(f"Opened MIDI input port: {self.port_name}")
         except IOError:
-            print(f"Could not open MIDI input port: {self.port_name}")
-            exit(1)
-        try:
-            # self.outport = mido.open_output('BUIT_MIDI')
-            ...
-        except IOError:
-            print(f"Could not open MIDI output port: BUIT_MIDI")
-            exit(1)
+            print(f"WARNING: Could not open MIDI input port '{self.port_name}'. "
+                  f"Set the MIDI_PORT env var to one of: {mido.get_input_names()}")
         self.callback = callback
         HarmonyBridge.instance_count += 1  # Increment the instance count when a new instance is created
         print(f"Number of HarmonyBridge instances: {HarmonyBridge.instance_count}")
@@ -76,15 +77,25 @@ class HarmonyBridge:
         print(f"Control Change: {message.control} Value: {message.value}")
         self.callback(message.control, message.value)
 
+    def _schedule_detect(self):
+        """Cancel any pending chord detection and reschedule after DEBOUNCE_DELAY."""
+        with self._timer_lock:
+            if self._chord_timer is not None:
+                self._chord_timer.cancel()
+            self._chord_timer = threading.Timer(self.DEBOUNCE_DELAY, self.detect_chord)
+            self._chord_timer.daemon = True
+            self._chord_timer.start()
+
     def on_note_on(self, message):
         """
         Callback function for the MIDI input port.
         :param message: The MIDI message received.
         """
         if message.channel == self.channel:
-            self.played_notes.append(message.note)
-            if len(self.played_notes) == self.n_notes_detection:
-                self.detect_chord()
+            if message.note not in self.played_notes:
+                self.played_notes.append(message.note)
+            if len(self.played_notes) >= 3:
+                self._schedule_detect()
 
     def detect_chord(self):
         """
@@ -104,13 +115,20 @@ class HarmonyBridge:
         :param message: The MIDI message received.
         """
         if message.channel == self.channel:
-            self.played_notes.remove(message.note)
+            if message.note in self.played_notes:
+                self.played_notes.remove(message.note)
+            # Cancel pending detection — chord is changing
+            with self._timer_lock:
+                if self._chord_timer is not None:
+                    self._chord_timer.cancel()
+                    self._chord_timer = None
 
     def close(self):
         """
         Closes the MIDI input port.
         """
-        self.port.close()
+        if self.port:
+            self.port.close()
 
 
 if __name__ == '__main__':
