@@ -5,11 +5,22 @@ from flask import Flask, render_template
 from flask_socketio import SocketIO
 from HarmonyBridge import HarmonyBridge
 from flask_cors import CORS
+import json
 import queue
 import os
 import time
 
 app = Flask(__name__)
+
+def _load_music_data():
+    base = os.path.dirname(__file__)
+    with open(os.path.join(base, 'static', 'data', 'chords.json')) as f:
+        chords = json.load(f)
+    with open(os.path.join(base, 'static', 'data', 'scales.json')) as f:
+        scales = json.load(f)
+    return {'chords': chords, 'scales': scales}
+
+MUSIC_DATA = _load_music_data()
 CORS(app, resources={r"/*": {"origins": "*"}})
 # Configure SocketIO for better performance
 socketio = SocketIO(
@@ -78,7 +89,7 @@ def error_handler(e):
 
 @app.route('/')
 def index():
-    return render_template('index.html')
+    return render_template('index.html', music_data=MUSIC_DATA)
 
 if __name__ == '__main__':
     import threading

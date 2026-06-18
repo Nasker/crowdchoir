@@ -8,6 +8,7 @@
     <link rel="icon" type="image/png" href="{{ url_for('static', filename='favicon.png') }}">
     <script src="{{ url_for('static', filename='vendor/tone.js') }}"></script>
     <script src="{{ url_for('static', filename='vendor/socket.io.min.js') }}"></script>
+    <script>window.MUSIC_DATA = {{ music_data | tojson }};</script>
 </head>
 <body>
     <header>

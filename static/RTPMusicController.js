@@ -8,16 +8,9 @@ const PartType = {
     DRUM: 3
 };
 
-const scale_name = ["Chromatic", "Ionian", "Dorian", "Phrygian", "Lydian",
-    "Mixolydian", "Aeolian", "Locrian", "Harmonic", "Gipsy",
-    "Hawaian", "Blues", "Japanese", "Drum"];
-
-const chord_name = ["mono", "Major", "minor", "Major7th", "minor7th", "Dominant7th",
-              "Diminished", "Diminished7th", "HalfDiminished7th", "Augmented",
-              "Major9th", "minor9th", "Dominant9th", "Suspended4th", "Suspended2th",
-              "Sixth"]
-
-const root_name = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
+const scale_name = window.MUSIC_DATA.scales.names;
+const chord_name = window.MUSIC_DATA.chords.names;
+const root_name  = window.MUSIC_DATA.scales.rootNames;
 
 class RTPMusicController {
     constructor() {

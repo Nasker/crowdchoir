@@ -1,5 +1,5 @@
-from ChordMatrix import RTPChordMatrix
-from ScalesMatrix import RTPDiatonicMatrix
+from ChordMatrix import RTPChordMatrix, CHORD_NAMES as chord_name
+from ScalesMatrix import RTPDiatonicMatrix, SCALE_NAMES as scale_name, ROOT_NAMES as root_name
 from enum import Enum
 
 
@@ -8,19 +8,6 @@ class PartType(Enum):
     FULL_CHORD = 1
     ARP_CHORD = 2
     DRUM = 3
-
-# Define the scale names (list of strings in Python)
-scale_name = ["Chromatic", "Ionian", "Dorian", "Phrygian", "Lydian",
-    "Mixolydian", "Aeolian", "Locrian", "Harmonic", "Gipsy",
-    "Hawaian", "Blues", "Japanese", "Drum"]
-
-chord_name = ["mono", "Major", "minor", "Major7th", "minor7th", "Dominant7th",
-              "Diminished", "Diminished7th", "HalfDiminished7th", "Augmented",
-              "Major9th", "minor9th", "Dominant9th", "Suspended4th", "Suspended2th",
-              "Sixth"]
-
-# Define the root names (list of strings in Python)
-root_name = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"]
 class RTPMusicController:
     def __init__(self):
         self._CNote = 36
