@@ -123,12 +123,25 @@ class HarmonyBridge:
                     self._chord_timer.cancel()
                     self._chord_timer = None
 
+    def reconnect(self, new_port_name):
+        """Close current port and reopen with a new port name. Returns True on success."""
+        self.close()
+        self.port_name = new_port_name
+        try:
+            self.port = mido.open_input(self.port_name, callback=self.select_message_type)
+            print(f"Reconnected to MIDI port: {self.port_name}")
+            return True
+        except IOError:
+            self.port = None
+            print(f"WARNING: Could not open MIDI port '{self.port_name}'. "
+                  f"Available: {mido.get_input_names()}")
+            return False
+
     def close(self):
-        """
-        Closes the MIDI input port.
-        """
+        """Closes the MIDI input port."""
         if self.port:
             self.port.close()
+            self.port = None
 
 
 if __name__ == '__main__':

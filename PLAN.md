@@ -4,71 +4,40 @@ This document proposes concrete improvements to CrowdChoir, ordered roughly by i
 
 ---
 
-## Priority 1 — Fix Real Usability Blockers
+## Priority 1 — Fix Real Usability Blockers  ✅ Done
 
-### 1.1 Make the MIDI port configurable without editing source
+### 1.1 Make the MIDI port configurable without editing source  ✅
 
-**Problem:** `HarmonyBridge.py` and `app.py` hardcode `Driver IAC Bus 1`. The app silently does nothing if that port doesn't exist, with no user feedback.
+MIDI port and channel are now read from `MIDI_PORT` / `MIDI_CHANNEL` env vars. HarmonyBridge logs available ports on startup and continues in browser-only mode if the port is missing. The conductor page also supports switching ports live.
 
-**Fix:**
-- Read the port name from an environment variable (`MIDI_PORT`) with a sensible fallback.
-- On startup, print all available MIDI ports so the user can see what to set.
-- If the port cannot be opened, log a warning and continue (browser-only mode still works).
+### 1.2 Detect 3-note triads in addition to 4-note chords  ✅
 
-```python
-# app.py / HarmonyBridge.py
-import os
-midi_port = os.getenv('MIDI_PORT', 'Driver IAC Bus 1')
-print("Available MIDI ports:", mido.get_input_names())
-```
+Replaced the fixed 4-note trigger with a 150 ms debounce timer. Any 3+ note combination fires chord detection after strumming settles.
 
-**Effort:** 30 minutes.
+### 1.3 Bundle dependencies (remove CDN requirement)  ✅
+
+Tone.js and Socket.IO 4.3.2 are saved to `static/vendor/` and served locally. No internet required at the venue.
 
 ---
 
-### 1.2 Detect 3-note triads in addition to 4-note chords
+## Priority 2 — Eliminate Duplicated Code  ✅ Done
 
-**Problem:** `HarmonyBridge` only triggers chord detection when exactly 4 notes are active. Triads (the most common chord voicing) are never detected.
+### 2.1 Single source of truth for music theory data (Option A)  ✅
 
-**Fix:**
-- Change `n_notes_detection` to a range (e.g. 3–6) or trigger detection after a short debounce (e.g. 150 ms of no new note_on events) rather than on a fixed count.
-- A debounce approach is more robust for lazy players and staggered strumming.
-
-**Effort:** 1–2 hours.
+`static/data/chords.json` and `scales.json` are the canonical source. Python matrix classes load from JSON at import time; Flask injects `window.MUSIC_DATA` into the participant page so JS reads the same data without a fetch.
 
 ---
 
-### 1.3 Bundle dependencies (remove CDN requirement)
+## Priority 2b — Conductor Interface  ✅ Done
 
-**Problem:** Tone.js and Socket.IO are loaded from public CDNs. The app fails without internet access, which is a real issue in workshop/performance venues with no WiFi.
+### 2b.1 Conductor dashboard at `/conductor`  ✅
 
-**Fix:**
-- `npm install tone socket.io-client`
-- Bundle with a lightweight bundler (Vite or esbuild).
-- Serve assets locally from `static/`.
-
-**Effort:** 2–3 hours (one-time setup).
-
----
-
-## Priority 2 — Eliminate Duplicated Code
-
-### 2.1 Single source of truth for music theory data
-
-**Problem:** `ChordMatrix`, `ScalesMatrix`, and `MusicController` exist in both Python (`ChordMatrix.py`, `ScalesMatrix.py`, `MusicController.py`) and JavaScript (`RTPChordMatrix.js`, `RTPScaleMatrix.js`, `RTPMusicController.js`). Any change must be made in two places.
-
-**Options (pick one):**
-
-**Option A — JSON data files (simplest):**
-- Extract chord/scale arrays into `static/data/chords.json` and `scales.json`.
-- Python reads these JSON files at startup; JavaScript fetches or imports them.
-- Music logic stays in language-native classes but data has one home.
-
-**Option B — Generate JS from Python at build time:**
-- Python script writes the JS matrix files from the canonical Python source.
-- Add a `make` or `npm` task to regenerate them.
-
-**Effort:** 2–4 hours for Option A.
+A dark-themed dashboard at `http://<server>:5000/conductor` provides:
+- Live **client count** (all connected browsers)
+- **MIDI port status** indicator (green/red dot + port name)
+- **Current chord** display (root note + chord type name)
+- **MIDI port selector** with live Refresh and Connect buttons — switches the port without restarting the server
+- **Manual chord picker** — 12 root note buttons × 16 chord type buttons; selecting both immediately broadcasts the chord to all participants (same pipeline as MIDI input)
 
 ---
 
@@ -207,20 +176,19 @@ web: gunicorn --worker-class eventlet -w 1 --bind 0.0.0.0:$PORT app:app
 
 ## Summary Table
 
-| # | Item | Impact | Effort | Priority |
-|---|------|--------|--------|----------|
-| 1.1 | Configurable MIDI port | High | Low | Now |
-| 1.2 | 3-note triad detection | High | Low | Now |
-| 1.3 | Bundle JS dependencies | High | Medium | Now |
-| 2.1 | Single source for music data | Medium | Medium | Soon |
-| 3.1 | Octave UI control | Medium | Low | Soon |
-| 3.2 | Scale selection UI | Medium | Medium | Soon |
+| # | Item | Impact | Effort | Status |
+|---|------|--------|--------|--------|
+| 1.1 | Configurable MIDI port | High | Low | ✅ Done |
+| 1.2 | 3-note triad detection | High | Low | ✅ Done |
+| 1.3 | Bundle JS dependencies | High | Medium | ✅ Done |
+| 2.1 | Single source for music data | Medium | Medium | ✅ Done |
+| 2b.1 | Conductor dashboard | High | Medium | ✅ Done |
+| 3.1 | Octave UI control | Medium | Low | Next |
+| 3.2 | Scale selection UI (conductor + participant) | Medium | Medium | Next |
 | 3.3 | Active note visualisation | Medium | Medium | Soon |
 | 3.4 | More sample sets | High | Low (assets) | Soon |
 | 4.1 | Production server | High | Medium | Before public deploy |
 | 4.2 | HTTPS/WSS | High | Medium | Before public deploy |
-| 4.3 | MIDI reconnection | Medium | Low | Soon |
-| 5.1 | Chord picker (no MIDI) | High | Medium | Next major feature |
+| 4.3 | MIDI reconnection (auto-retry) | Medium | Low | Soon |
 | 5.2 | Record + playback | Medium | Medium | Later |
 | 5.3 | Per-client volume | Low | Low | Later |
-| 5.4 | Conductor view | Medium | Medium | Later |

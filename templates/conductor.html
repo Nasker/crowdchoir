@@ -1,0 +1,366 @@
+<!DOCTYPE HTML>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>CrowdChoir — Conductor</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <script src="/static/vendor/socket.io.min.js"></script>
+  <style>
+    :root {
+      --bg:         #121212;
+      --surface:    #1e1e1e;
+      --surface2:   #2a2a2a;
+      --border:     #333;
+      --accent:     #00bcd4;
+      --accent-dim: #00838f;
+      --red:        #e53935;
+      --green:      #43a047;
+      --text:       #e0e0e0;
+      --text-dim:   #888;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      min-height: 100vh;
+    }
+
+    /* ── Header ── */
+    header {
+      display: flex;
+      align-items: baseline;
+      gap: 10px;
+      padding: 14px 24px;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+    }
+    header h1 { font-size: 1.15rem; font-weight: 700; color: var(--accent); }
+    header .role { font-size: 0.8rem; color: var(--text-dim); }
+
+    /* ── Dashboard layout ── */
+    .dashboard {
+      max-width: 860px;
+      margin: 0 auto;
+      padding: 24px 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+    }
+
+    /* ── Status row ── */
+    .status-row {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+    }
+    .stat-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 14px 16px;
+    }
+    .stat-card .label {
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--text-dim);
+      margin-bottom: 6px;
+    }
+    .stat-card .value {
+      font-size: 1.7rem;
+      font-weight: 700;
+      color: var(--accent);
+      line-height: 1;
+    }
+    .stat-card .value.compact { font-size: 0.95rem; padding-top: 2px; }
+
+    /* status dot */
+    .dot {
+      display: inline-block;
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      margin-right: 5px;
+      flex-shrink: 0;
+    }
+    .dot.green { background: var(--green); box-shadow: 0 0 5px var(--green); }
+    .dot.red   { background: var(--red); }
+
+    /* ── Panel ── */
+    .panel {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 18px 20px;
+    }
+    .panel-title {
+      font-size: 0.72rem;
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+      color: var(--text-dim);
+      margin-bottom: 14px;
+    }
+
+    /* ── MIDI selector ── */
+    .midi-row { display: flex; gap: 8px; align-items: center; }
+    select {
+      flex: 1;
+      background: var(--surface2);
+      color: var(--text);
+      border: 1px solid #444;
+      border-radius: 6px;
+      padding: 8px 10px;
+      font-size: 0.88rem;
+      outline: none;
+      cursor: pointer;
+    }
+    select:focus { border-color: var(--accent); }
+
+    /* ── Buttons ── */
+    .btn {
+      background: var(--surface2);
+      color: var(--text);
+      border: 1px solid #444;
+      border-radius: 6px;
+      padding: 8px 14px;
+      font-size: 0.82rem;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: background 0.12s, border-color 0.12s;
+    }
+    .btn:hover { background: #333; border-color: #666; }
+    .btn.primary { background: var(--accent-dim); border-color: var(--accent); color: #fff; }
+    .btn.primary:hover { background: var(--accent); }
+
+    /* ── Chord picker ── */
+    .picker-label {
+      font-size: 0.72rem;
+      color: var(--text-dim);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 8px;
+    }
+    .picker-label + * { margin-bottom: 14px; }
+
+    .root-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-bottom: 14px;
+    }
+    .chord-grid {
+      display: grid;
+      grid-template-columns: repeat(8, 1fr);
+      gap: 6px;
+    }
+
+    .root-btn, .chord-btn {
+      background: var(--surface2);
+      color: var(--text);
+      border: 1px solid #444;
+      border-radius: 6px;
+      padding: 7px 4px;
+      font-size: 0.78rem;
+      text-align: center;
+      cursor: pointer;
+      transition: background 0.1s, border-color 0.1s, color 0.1s;
+      user-select: none;
+    }
+    .root-btn { min-width: 42px; }
+    .root-btn:hover, .chord-btn:hover { border-color: var(--accent); color: var(--accent); }
+    .root-btn.active, .chord-btn.active {
+      background: var(--accent-dim);
+      border-color: var(--accent);
+      color: #fff;
+    }
+
+    /* ── Responsive ── */
+    @media (max-width: 580px) {
+      .status-row    { grid-template-columns: 1fr 1fr; }
+      .chord-grid    { grid-template-columns: repeat(4, 1fr); }
+      .stat-card .value { font-size: 1.3rem; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>CrowdChoir</h1>
+  <span class="role">Conductor</span>
+</header>
+
+<div class="dashboard">
+
+  <!-- Status cards -->
+  <div class="status-row">
+    <div class="stat-card">
+      <div class="label">Connected</div>
+      <div class="value" id="client-count">—</div>
+    </div>
+    <div class="stat-card">
+      <div class="label">MIDI Input</div>
+      <div class="value compact">
+        <span class="dot red" id="midi-dot"></span><span id="midi-port-label">—</span>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="label">Current Chord</div>
+      <div class="value compact" id="current-chord-label">—</div>
+    </div>
+  </div>
+
+  <!-- MIDI port selector -->
+  <div class="panel">
+    <p class="panel-title">MIDI Input</p>
+    <div class="midi-row">
+      <select id="midi-port-select"></select>
+      <button class="btn" id="refresh-btn">Refresh</button>
+      <button class="btn primary" id="connect-btn">Connect</button>
+    </div>
+  </div>
+
+  <!-- Manual chord picker -->
+  <div class="panel">
+    <p class="panel-title">Manual Chord</p>
+    <p class="picker-label">Root</p>
+    <div class="root-grid" id="root-grid"></div>
+    <p class="picker-label">Type</p>
+    <div class="chord-grid" id="chord-grid"></div>
+  </div>
+
+</div>
+
+<script>
+  const socket = io();
+
+  let selectedRoot      = null;
+  let selectedChordType = null;
+  let rootNames         = [];
+  let chordNames        = [];
+
+  // ── Socket events ──────────────────────────────────────────────────────────
+
+  socket.on('connect', () => socket.emit('join_conductor'));
+
+  socket.on('server_state', (data) => {
+    rootNames  = data.root_names;
+    chordNames = data.chord_names;
+
+    setClientCount(data.client_count);
+    setMidiStatus(data.midi_connected, data.midi_port);
+    populateMidiPorts(data.midi_ports, data.midi_port);
+    buildPicker();
+
+    if (data.current_chord && data.current_chord.root !== null) {
+      selectedRoot      = data.current_chord.root;
+      selectedChordType = data.current_chord.chord_type;
+      highlightRoot(selectedRoot);
+      highlightChord(selectedChordType);
+      setCurrentChordLabel(selectedRoot, selectedChordType);
+    }
+  });
+
+  socket.on('client_count',  (d) => setClientCount(d.count));
+  socket.on('midi_status',   (d) => setMidiStatus(d.connected, d.port));
+  socket.on('midi_ports',    (d) => populateMidiPorts(d.ports, document.getElementById('midi-port-label').textContent));
+  socket.on('chord_changed', (d) => {
+    selectedRoot      = d.root;
+    selectedChordType = d.chord_type;
+    highlightRoot(selectedRoot);
+    highlightChord(selectedChordType);
+    setCurrentChordLabel(selectedRoot, selectedChordType);
+  });
+
+  // ── UI helpers ─────────────────────────────────────────────────────────────
+
+  function setClientCount(n) {
+    document.getElementById('client-count').textContent = n;
+  }
+
+  function setMidiStatus(connected, port) {
+    document.getElementById('midi-dot').className = 'dot ' + (connected ? 'green' : 'red');
+    document.getElementById('midi-port-label').textContent = port || '—';
+  }
+
+  function setCurrentChordLabel(root, chordType) {
+    const el   = document.getElementById('current-chord-label');
+    const note = rootNames[root % 12];
+    const type = chordNames[chordType];
+    el.textContent = (note && type) ? `${note} ${type}` : '—';
+  }
+
+  function populateMidiPorts(ports, current) {
+    const sel = document.getElementById('midi-port-select');
+    sel.innerHTML = '';
+    if (!ports || ports.length === 0) {
+      sel.innerHTML = '<option value="">(no MIDI ports found)</option>';
+      return;
+    }
+    ports.forEach(p => {
+      const opt = document.createElement('option');
+      opt.value = p;
+      opt.textContent = p;
+      if (p === current) opt.selected = true;
+      sel.appendChild(opt);
+    });
+  }
+
+  // ── Chord picker ───────────────────────────────────────────────────────────
+
+  function buildPicker() {
+    buildGrid('root-grid',  rootNames,  'root-btn',  onRootClick);
+    buildGrid('chord-grid', chordNames, 'chord-btn', onChordClick);
+  }
+
+  function buildGrid(containerId, labels, cls, handler) {
+    const el = document.getElementById(containerId);
+    el.innerHTML = '';
+    labels.forEach((name, i) => {
+      const btn = document.createElement('button');
+      btn.className  = cls;
+      btn.textContent = name;
+      btn.dataset.idx = i;
+      btn.addEventListener('click', () => handler(i));
+      el.appendChild(btn);
+    });
+  }
+
+  function onRootClick(idx) {
+    selectedRoot = idx;
+    highlightRoot(idx);
+    if (selectedChordType !== null) sendChord();
+  }
+
+  function onChordClick(idx) {
+    selectedChordType = idx;
+    highlightChord(idx);
+    if (selectedRoot !== null) sendChord();
+  }
+
+  function highlightRoot(idx) {
+    document.querySelectorAll('.root-btn').forEach(b => b.classList.toggle('active', +b.dataset.idx === idx));
+  }
+
+  function highlightChord(idx) {
+    document.querySelectorAll('.chord-btn').forEach(b => b.classList.toggle('active', +b.dataset.idx === idx));
+  }
+
+  function sendChord() {
+    socket.emit('set_chord', { root: selectedRoot, chord_type: selectedChordType });
+  }
+
+  // ── MIDI controls ──────────────────────────────────────────────────────────
+
+  document.getElementById('connect-btn').addEventListener('click', () => {
+    const port = document.getElementById('midi-port-select').value;
+    if (port) socket.emit('set_midi_port', { port });
+  });
+
+  document.getElementById('refresh-btn').addEventListener('click', () => {
+    socket.emit('request_midi_ports');
+  });
+</script>
+</body>
+</html>

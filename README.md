@@ -4,7 +4,7 @@ A collaborative, web-based music application that lets multiple people play harm
 
 ## How It Works
 
-1. A musician plays chords on a connected MIDI controller.
+1. A musician plays chords on a connected MIDI controller **or** picks a chord on the Conductor page.
 2. The server detects the chord (root note + chord type) and broadcasts it over WebSocket to every connected browser.
 3. Each browser participant uses the XY-pad to play notes — the X-axis selects which chord step to play, the Y-axis controls filter cutoff, and horizontal drag controls filter resonance.
 4. All audio synthesis happens in the browser using the Web Audio API (via Tone.js) and a set of sampled instruments.
@@ -13,12 +13,13 @@ The result is a guided collective improvisation: the leader's hands shape what k
 
 ## Features
 
-- Real-time chord detection from MIDI input (4-note detection)
+- Real-time chord detection from MIDI input (3+ note debounce detection)
+- **Conductor page** (`/conductor`) — MIDI port selector, live client count, current chord display, manual chord picker
 - WebSocket broadcast to unlimited concurrent browser clients
-- XY-pad interface (touch and mouse)
+- XY-pad interface (touch and mouse) for each participant
 - Two sampled instrument sets: Mello Flute and Mello Ohs
 - Audio effects chain: filter → envelope → compression → feedback delay → limiter
-- 16 chord types and 14 scales supported
+- 16 chord types and 14 scales (single JSON source of truth for Python and JS)
 - Responsive design with mobile touch support
 
 ## Requirements
@@ -56,23 +57,30 @@ print(mido.get_output_names())
 ```
 crowdchoir/
 ├── app.py                     # Flask server + Socket.IO + MIDI entry point
-├── HarmonyBridge.py           # MIDI listener and chord detection trigger
+├── HarmonyBridge.py           # MIDI listener, chord detection, port management
 ├── ChordFinder.py             # Identifies chord type from a set of MIDI notes
 ├── MusicController.py         # Server-side harmonic state manager
-├── ChordMatrix.py             # Chord interval definitions (16 types)
-├── ScalesMatrix.py            # Scale definitions (14 types)
+├── ChordMatrix.py             # Loads chord data from JSON
+├── ScalesMatrix.py            # Loads scale data from JSON
 ├── requirements.txt           # Python dependencies
 ├── templates/
-│   └── index.html             # Single-page app shell
+│   ├── index.html             # Participant page (XY-pad)
+│   └── conductor.html         # Conductor dashboard
 └── static/
-    ├── main.js                # Frontend entry point
+    ├── main.js                # Participant frontend entry point
     ├── Synth.js               # Web Audio synthesis engine (Tone.js)
-    ├── RTPMusicController.js  # Client-side harmonic state (mirrors Python)
-    ├── RTPChordMatrix.js      # Client chord data
-    ├── RTPScaleMatrix.js      # Client scale data
+    ├── RTPMusicController.js  # Client-side harmonic state
+    ├── RTPChordMatrix.js      # Client chord data (from window.MUSIC_DATA)
+    ├── RTPScaleMatrix.js      # Client scale data (from window.MUSIC_DATA)
     ├── WebSocketHandler.js    # Socket.IO client wrapper
     ├── UserInteraction.js     # Input handling
     ├── styles.css             # Dark theme UI
+    ├── data/
+    │   ├── chords.json        # Single source of truth for chord definitions
+    │   └── scales.json        # Single source of truth for scale definitions
+    ├── vendor/
+    │   ├── tone.js            # Tone.js (local copy, no CDN required)
+    │   └── socket.io.min.js   # Socket.IO client (local copy)
     └── samples/               # MP3 audio samples
         ├── mello_flute/       # C3 E3 G3 A3 C4
         └── mello_ohs/         # C3 E3 G3 A3 C4
@@ -80,13 +88,21 @@ crowdchoir/
 
 ## Usage
 
+### Participants
 1. Open `http://<server-ip>:5000` in a browser on the same network.
 2. Click **Start Audio** to initialize the Web Audio context (required by browsers).
 3. Touch or click anywhere on the XY-pad to play a note:
    - **Y-axis**: filter cutoff frequency (bottom = dark/muffled, top = bright/open)
    - **X-axis**: selects chord step and filter resonance
 4. Use the **Mello Flute / Mello Ohs** buttons to switch instruments.
-5. If a MIDI controller is connected to the server, the displayed chord updates automatically and all participants hear the same harmonic context.
+
+### Conductor
+1. Open `http://<server-ip>:5000/conductor` in a browser.
+2. The dashboard shows the number of connected browsers, MIDI port status, and current chord.
+3. Select a MIDI input port from the dropdown and click **Connect** to switch ports live.
+4. Click **Refresh** to re-scan available MIDI ports.
+5. Use the **Root** and **Type** buttons to set the chord manually — it broadcasts to all participants immediately.
+6. MIDI controller input and manual chord picks both go through the same broadcast pipeline.
 
 ## Dependencies
 
