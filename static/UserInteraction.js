@@ -1,52 +1,69 @@
-export default class UserInteraction {
-    constructor(synth) {
+export default class GyroController {
+    constructor(synth, onValuesChanged) {
         this.synth = synth;
-        this.isRunning = false;
-        this.init();
+        this.onValuesChanged = onValuesChanged;
+        this.isActive = false;
+        this.isAvailable = this._detectSupport();
+        this._orientationHandler = this._handleOrientation.bind(this);
+        this._betaRange = 90;   // front/back tilt is clamped to +/- 90 degrees
+        this._gammaRange = 45;  // left/right tilt is clamped to +/- 45 degrees
     }
 
-    init() {
-        window.addEventListener("mousemove", (event) => this.handleMouseMove(event));
-        document.getElementById("start_demo").addEventListener("click", (e) => this.toggleGyro(e));
+    _detectSupport() {
+        return typeof window !== 'undefined' &&
+               ('DeviceOrientationEvent' in window || 'ondeviceorientation' in window);
     }
 
-    toggleGyro(e) {
-        e.preventDefault();
-        const demoButton = e.target;
-        if (this.isRunning) {
-            window.removeEventListener("deviceorientation", this.handleOrientation.bind(this));
-            demoButton.innerHTML = "Start demo";
-            demoButton.classList.remove('btn-danger');
-            demoButton.classList.add('btn-success');
-            this.isRunning = false;
-        } else {
-            if (typeof DeviceOrientationEvent.requestPermission === "function") {
-                DeviceOrientationEvent.requestPermission()
-                    .then(permissionState => {
-                        if (permissionState === "granted") {
-                            window.addEventListener("deviceorientation", this.handleOrientation.bind(this));
-                        }
-                    })
-                    .catch(console.error);
-            } else {
-                window.addEventListener("deviceorientation", this.handleOrientation.bind(this));
-                console.log("DeviceOrientation Added");
+    async enable() {
+        if (!this.isAvailable) return false;
+
+        if (typeof DeviceOrientationEvent.requestPermission === 'function') {
+            try {
+                const state = await DeviceOrientationEvent.requestPermission();
+                if (state !== 'granted') {
+                    console.warn('Gyroscope permission denied:', state);
+                    return false;
+                }
+            } catch (err) {
+                console.error('Gyroscope permission error:', err);
+                return false;
             }
-            demoButton.innerHTML = "Stop demo";
-            demoButton.classList.remove('btn-success');
-            demoButton.classList.add('btn-danger');
-            this.isRunning = true;
         }
+
+        window.addEventListener('deviceorientation', this._orientationHandler);
+        this.isActive = true;
+        return true;
     }
 
-    handleMouseMove(event) {
-        this.synth.setFilterFrequency(event.clientY);
+    disable() {
+        window.removeEventListener('deviceorientation', this._orientationHandler);
+        this.isActive = false;
     }
 
-    handleOrientation(event) {
-        if (event.beta != null) {
-            let y_range = (event.beta + 180) * (window.innerHeight / 360);
-            this.synth.setFilterFrequency(y_range);
+    async toggle() {
+        if (this.isActive) {
+            this.disable();
+            return false;
+        }
+        return await this.enable();
+    }
+
+    _handleOrientation(event) {
+        if (event.beta == null || event.gamma == null) return;
+
+        // beta -> filter cutoff (0..1), inverted so top of phone = high cutoff
+        const beta = Math.max(-this._betaRange, Math.min(this._betaRange, event.beta));
+        const normalizedY = 1 - ((beta + this._betaRange) / (this._betaRange * 2));
+
+        // gamma -> resonance (0..1)
+        const gamma = Math.max(-this._gammaRange, Math.min(this._gammaRange, event.gamma));
+        const normalizedX = (gamma + this._gammaRange) / (this._gammaRange * 2);
+
+        const cutoff = this.synth.setFilterFrequency(normalizedY);
+        const resonance = this.synth.setResonance(normalizedX);
+
+        if (this.onValuesChanged) {
+            this.onValuesChanged(cutoff, resonance);
         }
     }
 }

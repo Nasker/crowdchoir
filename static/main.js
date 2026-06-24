@@ -1,6 +1,6 @@
 import Synth from "./Synth.js";
 import WebSocketHandler from "./WebSocketHandler.js";
-import UserInteraction from "./UserInteraction.js";
+import GyroController from "./UserInteraction.js";
 import RTPMusicController from "./RTPMusicController.js";
 
 // Initialize music controller and synth
@@ -18,6 +18,7 @@ const resonanceValueDisplay = document.getElementById('resonance-value');
 
 // Track touch/click state
 let isInteracting = false;
+let gyroActive = false;
 
 // Audio start/stop button handler
 startAudioButton.addEventListener('click', () => {
@@ -53,6 +54,8 @@ sampleButtons.forEach(button => {
 
 // Function to handle XY-pad interaction
 function handleXYInteraction(clientX, clientY) {
+    if (gyroActive) return;
+
     const rect = xyPad.getBoundingClientRect();
     
     // Calculate normalized coordinates (0-1)
@@ -158,7 +161,29 @@ function processSocketData(data) {
 }
 
 const webSocketHandler = new WebSocketHandler(`http://${window.location.hostname}:5000`, processSocketData);
-const userInteraction = new UserInteraction(synth);
 
+// Gyroscope as primary filter control, XY pad as fallback
+const gyroToggle = document.getElementById('gyroToggle');
+const gyroController = new GyroController(synth, (cutoff, resonance) => {
+    if (!gyroActive) return;
+    cutoffValueDisplay.textContent = `Cutoff: ${cutoff} Hz`;
+    resonanceValueDisplay.textContent = `Resonance: ${resonance}`;
+});
 
-userInteraction.init();
+if (gyroController.isAvailable && gyroToggle) {
+    gyroToggle.style.display = 'inline-block';
+    gyroToggle.addEventListener('click', async () => {
+        const active = await gyroController.toggle();
+        gyroActive = active;
+        gyroToggle.textContent = active ? 'Disable Gyroscope' : 'Enable Gyroscope';
+        gyroToggle.classList.toggle('active', active);
+        gyroToggle.classList.toggle('inactive', !active);
+
+        const instructions = document.querySelector('.pad-instructions p');
+        if (instructions) {
+            instructions.textContent = active
+                ? 'Tilt device to control filter'
+                : 'Touch or click to control filter';
+        }
+    });
+}
