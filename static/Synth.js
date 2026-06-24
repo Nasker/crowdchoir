@@ -24,7 +24,7 @@ export default class Synth {
         this.comp = new Tone.Compressor(-30, 3);
         this.feedbackDelay = new Tone.FeedbackDelay("8n", 0.1);
         this.envelope = new Tone.AmplitudeEnvelope({
-            attack: 1.0,
+            attack: 0.01,
             decay: 0.2,
             sustain: 1.0,
             release: 0.8,

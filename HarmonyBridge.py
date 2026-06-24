@@ -20,7 +20,7 @@ class HarmonyBridge:
         self.port_name = port_name
         self.played_notes = []
         self.channel = channel
-        self.DEBOUNCE_DELAY = 0.15  # seconds — wait for strumming to settle
+        self.DEBOUNCE_DELAY = 0.03  # seconds — wait for strumming to settle
 
         # Debounce timer for chord detection
         self._chord_timer = None
@@ -29,7 +29,7 @@ class HarmonyBridge:
         # Deduplication cache
         self.last_message = None
         self.last_message_time = 0
-        self.dedup_timeout = 0.5  # seconds
+        self.dedup_timeout = 0.1  # seconds
         self.port = None
         try:
             self.port = mido.open_input(self.port_name, callback=self.select_message_type)

@@ -4,7 +4,6 @@ from flask_cors import CORS
 from HarmonyBridge import HarmonyBridge
 import json
 import mido
-import queue
 import os
 import time
 
@@ -40,9 +39,8 @@ midi_port    = os.environ.get('MIDI_PORT', 'Driver IAC Bus 1')
 midi_channel = int(os.environ.get('MIDI_CHANNEL', '0'))
 
 harmony_bridge    = None
-event_queue       = queue.Queue()
 message_cache     = {}
-CACHE_TIMEOUT     = 0.5   # seconds
+CACHE_TIMEOUT     = 0.1   # seconds
 
 connected_clients = 0
 current_chord     = {'root': None, 'chord_type': None}
@@ -50,7 +48,7 @@ current_chord     = {'root': None, 'chord_type': None}
 # ── Core chord pipeline ───────────────────────────────────────────────────────
 
 def _queue_chord(root, chord_type):
-    """Dedup, persist state, queue for broadcast.  Called by MIDI input and conductor."""
+    """Dedup, persist state, and broadcast to clients.  Called by MIDI input and conductor."""
     global current_chord
     message_key  = f"{root}:{chord_type}"
     current_time = time.time()
@@ -65,20 +63,9 @@ def _queue_chord(root, chord_type):
             del message_cache[key]
 
     current_chord = {'root': root, 'chord_type': chord_type}
-    event_queue.put((root, chord_type))
+    socketio.emit('control_change', {'control': root, 'value': chord_type})
     socketio.emit('chord_changed', {'root': root, 'chord_type': chord_type}, to='conductor')
-    print(f"Queued chord: root={root} type={chord_type}")
-
-
-def process_event_queue():
-    while True:
-        if not event_queue.empty():
-            root, chord_type = event_queue.get()
-            socketio.emit('control_change', {'control': root, 'value': chord_type})
-            print(f"-> Broadcast control={root} value={chord_type}")
-        socketio.sleep(0.01)
-
-socketio.start_background_task(process_event_queue)
+    print(f"Broadcast chord: root={root} type={chord_type}")
 
 # ── Socket events: all clients ────────────────────────────────────────────────
 
