@@ -19,6 +19,7 @@ const resonanceValueDisplay = document.getElementById('resonance-value');
 // Track touch/click state
 let isInteracting = false;
 let gyroActive = false;
+let gyroYaw = 0;
 
 // Audio start/stop button handler
 startAudioButton.addEventListener('click', () => {
@@ -142,14 +143,14 @@ function processSocketData(data) {
     
     // Generate a position for the note based on the current pad dimensions
     const padRect = xyPad.getBoundingClientRect();
-    const x = Math.random() * padRect.width;
-    
-    // Flash the touch marker briefly at a random position
+    const x = gyroActive ? gyroYaw * padRect.width : Math.random() * padRect.width;
+
+    // Flash the touch marker briefly at the selected position
     touchMarker.style.left = `${x}px`;
     touchMarker.style.top = `${padRect.height / 2}px`;
     touchMarker.style.opacity = '1';
     touchMarker.style.backgroundColor = '#00ff00';
-    
+
     // Play the note
     synth.playNoteOnFromPosition(x);
     
@@ -168,10 +169,11 @@ const instructionsText = document.querySelector('.pad-instructions p');
 
 const gyroController = new GyroController(
     synth,
-    (cutoff, resonance) => {
+    (cutoff, resonance, yaw) => {
         if (!gyroActive) return;
         cutoffValueDisplay.textContent = `Cutoff: ${cutoff} Hz`;
         resonanceValueDisplay.textContent = `Resonance: ${resonance}`;
+        gyroYaw = yaw;
     },
     (message) => {
         if (instructionsText) {

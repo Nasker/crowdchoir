@@ -330,13 +330,15 @@
   function onRootClick(idx) {
     selectedRoot = idx;
     highlightRoot(idx);
-    if (selectedChordType !== null) sendChord();
+    // A root press always triggers the chord using the last selected type.
+    if (selectedChordType === null) selectedChordType = 0;
+    sendChord();
   }
 
   function onChordClick(idx) {
     selectedChordType = idx;
     highlightChord(idx);
-    if (selectedRoot !== null) sendChord();
+    // Selecting a type does not trigger the chord; it is only armed for the next root press.
   }
 
   function highlightRoot(idx) {
