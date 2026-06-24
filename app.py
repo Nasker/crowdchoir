@@ -153,4 +153,7 @@ if os.environ.get('WERKZEUG_RUN_MAIN') == 'true':
     harmony_bridge = HarmonyBridge(midi_port, _queue_chord, midi_channel)
 
 if __name__ == '__main__':
-    socketio.run(app, host='0.0.0.0', debug=True)
+    ssl_context = None
+    if os.environ.get('USE_SSL') == '1':
+        ssl_context = 'adhoc'
+    socketio.run(app, host='0.0.0.0', debug=True, ssl_context=ssl_context)

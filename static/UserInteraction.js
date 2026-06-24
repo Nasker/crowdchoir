@@ -1,12 +1,14 @@
 export default class GyroController {
-    constructor(synth, onValuesChanged) {
+    constructor(synth, onValuesChanged, onStatus) {
         this.synth = synth;
         this.onValuesChanged = onValuesChanged;
+        this.onStatus = onStatus;
         this.isActive = false;
         this.isAvailable = this._detectSupport();
         this._orientationHandler = this._handleOrientation.bind(this);
         this._betaRange = 90;   // front/back tilt is clamped to +/- 90 degrees
         this._gammaRange = 45;  // left/right tilt is clamped to +/- 45 degrees
+        this._eventReceived = false;
     }
 
     _detectSupport() {
@@ -14,30 +16,49 @@ export default class GyroController {
                ('DeviceOrientationEvent' in window || 'ondeviceorientation' in window);
     }
 
+    _setStatus(message) {
+        console.log('Gyro status:', message);
+        if (this.onStatus) this.onStatus(message);
+    }
+
     async enable() {
-        if (!this.isAvailable) return false;
+        if (!this.isAvailable) {
+            this._setStatus('Gyroscope not available on this device/browser.');
+            return false;
+        }
 
         if (typeof DeviceOrientationEvent.requestPermission === 'function') {
             try {
                 const state = await DeviceOrientationEvent.requestPermission();
                 if (state !== 'granted') {
-                    console.warn('Gyroscope permission denied:', state);
+                    this._setStatus('Gyroscope permission denied.');
                     return false;
                 }
             } catch (err) {
-                console.error('Gyroscope permission error:', err);
+                this._setStatus('Gyroscope permission error: ' + err.message);
                 return false;
             }
         }
 
+        this._eventReceived = false;
         window.addEventListener('deviceorientation', this._orientationHandler);
         this.isActive = true;
+        this._setStatus('Gyroscope enabled. Tilt device to control filter.');
+
+        // Confirm events are actually firing; on insecure origins they may be silent.
+        setTimeout(() => {
+            if (this.isActive && !this._eventReceived) {
+                this._setStatus('No gyroscope events received. On mobile, this usually requires HTTPS.');
+            }
+        }, 1500);
+
         return true;
     }
 
     disable() {
         window.removeEventListener('deviceorientation', this._orientationHandler);
         this.isActive = false;
+        this._setStatus('Gyroscope disabled. XY pad active.');
     }
 
     async toggle() {
@@ -49,6 +70,8 @@ export default class GyroController {
     }
 
     _handleOrientation(event) {
+        this._eventReceived = true;
+
         if (event.beta == null || event.gamma == null) return;
 
         // beta -> filter cutoff (0..1), inverted so top of phone = high cutoff

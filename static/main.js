@@ -160,15 +160,25 @@ function processSocketData(data) {
     }, 200);
 }
 
-const webSocketHandler = new WebSocketHandler(`http://${window.location.hostname}:5000`, processSocketData);
+const webSocketHandler = new WebSocketHandler(window.location.origin, processSocketData);
 
 // Gyroscope as primary filter control, XY pad as fallback
 const gyroToggle = document.getElementById('gyroToggle');
-const gyroController = new GyroController(synth, (cutoff, resonance) => {
-    if (!gyroActive) return;
-    cutoffValueDisplay.textContent = `Cutoff: ${cutoff} Hz`;
-    resonanceValueDisplay.textContent = `Resonance: ${resonance}`;
-});
+const instructionsText = document.querySelector('.pad-instructions p');
+
+const gyroController = new GyroController(
+    synth,
+    (cutoff, resonance) => {
+        if (!gyroActive) return;
+        cutoffValueDisplay.textContent = `Cutoff: ${cutoff} Hz`;
+        resonanceValueDisplay.textContent = `Resonance: ${resonance}`;
+    },
+    (message) => {
+        if (instructionsText) {
+            instructionsText.textContent = message;
+        }
+    }
+);
 
 if (gyroController.isAvailable && gyroToggle) {
     gyroToggle.style.display = 'inline-block';
@@ -179,11 +189,8 @@ if (gyroController.isAvailable && gyroToggle) {
         gyroToggle.classList.toggle('active', active);
         gyroToggle.classList.toggle('inactive', !active);
 
-        const instructions = document.querySelector('.pad-instructions p');
-        if (instructions) {
-            instructions.textContent = active
-                ? 'Tilt device to control filter'
-                : 'Touch or click to control filter';
+        if (!active && instructionsText) {
+            instructionsText.textContent = 'Touch or click to control filter';
         }
     });
 }
