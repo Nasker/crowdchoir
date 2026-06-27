@@ -1,6 +1,6 @@
 export default class WebSocketHandler {
     constructor(url, onControlChange) {
-        this.socket = io(url, { transports: ['websocket'] });
+        this.socket = io(url, { transports: ['websocket', 'polling'] });
 
         this.socket.on('connect', function(){
             console.log("Connected to the server");

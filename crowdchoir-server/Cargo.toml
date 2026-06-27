@@ -1,0 +1,17 @@
+[package]
+name = "crowdchoir-server"
+version = "0.1.0"
+edition = "2021"
+authors = ["CrowdChoir Contributors"]
+description = "Headless CrowdChoir server"
+
+[[bin]]
+name = "crowdchoir-server"
+path = "src/main.rs"
+
+[dependencies]
+crowdchoir = { path = ".." }
+tokio = { version = "1.38", features = ["full"] }
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+anyhow = "1.0"

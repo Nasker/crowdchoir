@@ -1,0 +1,45 @@
+[package]
+name = "crowdchoir"
+version = "0.1.0"
+edition = "2021"
+authors = ["CrowdChoir Contributors"]
+description = "Rust backend + GUI for CrowdChoir"
+
+[workspace]
+members = [".", "crowdchoir-server"]
+resolver = "2"
+
+[lib]
+name = "crowdchoir"
+path = "src/lib.rs"
+
+[[bin]]
+name = "crowdchoir"
+path = "src/main.rs"
+
+[dependencies]
+tokio = { version = "1.38", features = ["full"] }
+axum = { version = "0.7", features = ["tokio"] }
+socketioxide = { version = "0.15", features = ["state"] }
+tower = "0.4"
+tower-http = { version = "0.5", features = ["fs", "cors"] }
+midir = "0.10"
+eframe = { version = "0.28", features = ["default"] }
+egui = "0.28"
+rust-embed = "8.5"
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+anyhow = "1.0"
+rcgen = "0.13"
+rustls = { version = "0.23", features = ["ring"] }
+tokio-rustls = "0.26"
+hyper = { version = "1", features = ["http1", "http2"] }
+hyper-util = { version = "0.1", features = ["tokio", "server", "http1", "http2"] }
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter", "registry", "fmt"] }
+
+[profile.release]
+opt-level = 3
+lto = true
+codegen-units = 1
+strip = true

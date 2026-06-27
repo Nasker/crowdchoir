@@ -21,18 +21,42 @@ let isInteracting = false;
 let gyroActive = false;
 let gyroYaw = 0;
 
-// Audio start/stop button handler
-startAudioButton.addEventListener('click', () => {
+// ── Audio bootstrap via tap overlay ─────────────────────────────────────────
+const overlay = document.getElementById('tap-overlay');
+const overlayStatus = document.getElementById('overlay-status');
+let samplerReady = false;
+
+synth.loaded.then(() => {
+    samplerReady = true;
+    if (overlay) overlayStatus.textContent = 'Tap anywhere to join';
+});
+
+async function startAudio() {
+    if (overlay) overlay.style.display = 'none';
+    startAudioButton.textContent = 'Stop Audio';
+    startAudioButton.classList.add('active');
+    try {
+        await Tone.start();
+        // Reduce scheduling latency (default lookAhead is 100ms)
+        Tone.context.lookAhead = 0.025;
+    } catch (e) {
+        console.error('Audio start failed:', e);
+    }
+}
+
+if (overlay) {
+    overlay.addEventListener('click', startAudio);
+    overlay.addEventListener('touchend', (e) => { e.preventDefault(); startAudio(); });
+}
+
+// Fallback header button toggles audio after overlay is dismissed
+startAudioButton.addEventListener('click', async () => {
     if (Tone.context.state !== 'running') {
-        Tone.start();
-        startAudioButton.textContent = 'Stop Audio';
-        startAudioButton.classList.remove('inactive');
-        startAudioButton.classList.add('active');
+        await startAudio();
     } else {
-        Tone.context.close();
+        await Tone.context.suspend();
         startAudioButton.textContent = 'Start Audio';
         startAudioButton.classList.remove('active');
-        startAudioButton.classList.add('inactive');
     }
 });
 
@@ -125,6 +149,8 @@ xyPad.addEventListener('touchcancel', () => {
 
 function processSocketData(data) {
     console.log('Received control change callback:', data);
+
+    if (Tone.context.state !== 'running' || !samplerReady) return;
     
     // Handle note off message
     if(data.control >= 12) {

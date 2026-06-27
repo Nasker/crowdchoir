@@ -10,19 +10,22 @@ export default class Synth {
         };
         
         // Create the sampler with default sample set
-        this.synth = new Tone.Sampler({
-            urls: {
-                C3: "C3.mp3",
-                E3: "E3.mp3",
-                G3: "G3.mp3",
-                A3: "A3.mp3",
-                C4: "C4.mp3",
-            },
-            baseUrl: this.sampleSets[this.currentSampleSet],
+        this.loaded = new Promise((resolve) => {
+            this.synth = new Tone.Sampler({
+                urls: {
+                    C3: "C3.mp3",
+                    E3: "E3.mp3",
+                    G3: "G3.mp3",
+                    A3: "A3.mp3",
+                    C4: "C4.mp3",
+                },
+                baseUrl: this.sampleSets[this.currentSampleSet],
+                onload: resolve,
+            });
         });
         this.limiter = new Tone.Limiter(-20).toDestination();
         this.comp = new Tone.Compressor(-30, 3);
-        this.feedbackDelay = new Tone.FeedbackDelay("8n", 0.1);
+        this.feedbackDelay = new Tone.FeedbackDelay({ delayTime: "8n", feedback: 0.1, wet: 0.15 });
         this.envelope = new Tone.AmplitudeEnvelope({
             attack: 0.01,
             decay: 0.2,
