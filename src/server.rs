@@ -74,6 +74,17 @@ fn make_tls_config() -> Result<rustls::ServerConfig> {
         info!("TLS cert: adding LAN IP {} as SAN", ip);
         params.subject_alt_names.push(rcgen::SanType::IpAddress(ip));
     }
+    if let Ok(extra) = std::env::var("CROWDCHOIR_TLS_SANS") {
+        for s in extra.split(',').map(|s| s.trim()).filter(|s| !s.is_empty()) {
+            if let Ok(ip) = s.parse::<std::net::IpAddr>() {
+                info!("TLS cert: adding IP SAN {}", ip);
+                params.subject_alt_names.push(rcgen::SanType::IpAddress(ip));
+            } else {
+                info!("TLS cert: adding DNS SAN {}", s);
+                params.subject_alt_names.push(rcgen::SanType::DnsName(s.try_into()?));
+            }
+        }
+    }
     let key_pair = rcgen::KeyPair::generate()?;
     let cert = params.self_signed(&key_pair)?;
     let cert_der = rustls::pki_types::CertificateDer::from(cert.der().to_vec());
@@ -127,6 +138,51 @@ async fn serve_tls(
         }
     }
     Ok(())
+}
+
+/// Runs a tiny HTTP server that answers OS captive-portal probes with a splash
+/// page, prompting the user to open the real (HTTPS) app in their browser.
+pub async fn run_captive_portal(addr: SocketAddr, https_url: String) -> Result<()> {
+    let app = Router::new()
+        .fallback(get(captive_splash))
+        .with_state(https_url);
+    let listener = TcpListener::bind(addr).await?;
+    info!("Captive portal listening on http://{}", addr);
+    axum::serve(listener, app).await?;
+    Ok(())
+}
+
+async fn captive_splash(
+    axum::extract::State(https_url): axum::extract::State<String>,
+) -> impl IntoResponse {
+    let html = format!(
+        r#"<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Join the Choir</title>
+<style>
+  body {{ margin:0; height:100vh; display:flex; flex-direction:column;
+         justify-content:center; align-items:center; text-align:center;
+         font-family:system-ui,sans-serif; background:#111; color:#fff; gap:1.2em; padding:1.5em; }}
+  h1 {{ font-size:2em; margin:0; }}
+  a.join {{ display:inline-block; padding:0.8em 1.6em; font-size:1.3em;
+            background:#00aaff; color:#fff; text-decoration:none; border-radius:12px; }}
+  p {{ opacity:0.7; font-size:0.95em; max-width:22em; line-height:1.4; }}
+  code {{ background:#222; padding:0.15em 0.4em; border-radius:4px; }}
+</style>
+</head>
+<body>
+  <h1>🎶 Join the Choir</h1>
+  <a class="join" href="{url}">Tap to Join</a>
+  <p>If nothing happens, choose <b>“Open in Browser”</b>, or open your browser
+     and go to <code>{url}</code>. Accept the security warning once to continue.</p>
+</body>
+</html>"#,
+        url = https_url
+    );
+    Html(html)
 }
 
 pub async fn run_server(config: ServerConfig) -> Result<()> {

@@ -1,5 +1,5 @@
 use anyhow::Result;
-use crowdchoir::server::{run_server, ServerConfig};
+use crowdchoir::server::{run_captive_portal, run_server, ServerConfig};
 use std::env;
 use tracing_subscriber::EnvFilter;
 
@@ -23,6 +23,13 @@ fn main() -> Result<()> {
         .map(|v| v == "1" || v.to_lowercase() == "true")
         .unwrap_or(false);
 
+    let captive = env::var("CROWDCHOIR_CAPTIVE")
+        .map(|v| v == "1" || v.to_lowercase() == "true")
+        .unwrap_or(false);
+    let scheme = if tls { "https" } else { "http" };
+    let public_url = env::var("CROWDCHOIR_PUBLIC_URL")
+        .unwrap_or_else(|_| format!("{scheme}://{host}:{port}"));
+
     let config = ServerConfig {
         host,
         port,
@@ -34,5 +41,15 @@ fn main() -> Result<()> {
     };
 
     let rt = tokio::runtime::Runtime::new()?;
-    rt.block_on(run_server(config))
+    rt.block_on(async move {
+        if captive {
+            let captive_addr = ([0, 0, 0, 0], 80).into();
+            tokio::spawn(async move {
+                if let Err(e) = run_captive_portal(captive_addr, public_url).await {
+                    tracing::error!("Captive portal exited: {e}");
+                }
+            });
+        }
+        run_server(config).await
+    })
 }
